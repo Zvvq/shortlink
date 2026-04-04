@@ -10,6 +10,8 @@ public class PublicAPIConstant {
     public static final List<String> PUBLIC_API_SET = List.of(
             "/api/shortlink/v1/user/login", // 登录接口
             "/api/shortlink/v1/user/register", // 注册接口
+            "/api/shortlink/v1/user/exists/{username}", // 用户相关接口（如检查用户名是否存在）
+            "/{shortUrl}", // 短链接跳转接口
             "/v3/api-docs/**",     // Swagger API文档
             "/swagger-ui/**",
             "/swagger-ui.html"

@@ -27,6 +27,12 @@ public enum BaseErrorCode implements IErrorCode {
     GROUP_SAVE_ERROR("A000156", "用户组保存失败"),
     GROUP_SAVE_COUNT_ERROR("A000157", "用户组保存数量超出限制"),
 
+    // ========== 二级宏观错误码 短链接错误 ==========
+    SHORT_LINK_NOT_EXIST_ERROR("A000300", "短链接不存在"),
+    SHORT_LINK_UPDATE_ERROR("A000301", "短链接更新失败"),
+    SHORT_LINK_DELETE_ERROR("A000302", "短链接删除失败"),
+    SHORT_LINK_QUERY_ERROR("A000303", "短链接查询失败"),
+
     // ========== 二级宏观错误码 系统请求缺少幂等Token ==========
     IDEMPOTENT_TOKEN_NULL_ERROR("A000200", "幂等Token为空"),
     IDEMPOTENT_TOKEN_DELETE_ERROR("A000201", "幂等Token已被使用或失效"),

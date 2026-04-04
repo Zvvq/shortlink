@@ -1,4 +1,4 @@
-package com.cqie.shortlink_project.entity;
+package com.cqie.shortlink_admin.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.util.Date;
 
-import com.cqie.shortlink_project.common.convention.database.BaseDO;
+import com.cqie.shortlink_admin.common.convention.database.BaseDO;
 import lombok.Data;
 
 /**
@@ -15,7 +15,7 @@ import lombok.Data;
  */
 @TableName(value ="t_link")
 @Data
-public class LinkDO extends BaseDO {
+public class ShortLinkDO extends BaseDO {
     /**
      * ID
      */
@@ -79,35 +79,6 @@ public class LinkDO extends BaseDO {
     @TableField(value = "`describe`")
     private String describe;
 
-
-    @Override
-    public boolean equals(Object that) {
-        if (this == that) {
-            return true;
-        }
-        if (that == null) {
-            return false;
-        }
-        if (getClass() != that.getClass()) {
-            return false;
-        }
-        LinkDO other = (LinkDO) that;
-        return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
-            && (this.getDomain() == null ? other.getDomain() == null : this.getDomain().equals(other.getDomain()))
-            && (this.getShortUri() == null ? other.getShortUri() == null : this.getShortUri().equals(other.getShortUri()))
-            && (this.getFullShortUrl() == null ? other.getFullShortUrl() == null : this.getFullShortUrl().equals(other.getFullShortUrl()))
-            && (this.getOriginUrl() == null ? other.getOriginUrl() == null : this.getOriginUrl().equals(other.getOriginUrl()))
-            && (this.getClickNum() == null ? other.getClickNum() == null : this.getClickNum().equals(other.getClickNum()))
-            && (this.getGid() == null ? other.getGid() == null : this.getGid().equals(other.getGid()))
-            && (this.getEnableStatus() == null ? other.getEnableStatus() == null : this.getEnableStatus().equals(other.getEnableStatus()))
-            && (this.getCreatedType() == null ? other.getCreatedType() == null : this.getCreatedType().equals(other.getCreatedType()))
-            && (this.getValidDateType() == null ? other.getValidDateType() == null : this.getValidDateType().equals(other.getValidDateType()))
-            && (this.getValidDate() == null ? other.getValidDate() == null : this.getValidDate().equals(other.getValidDate()))
-            && (this.getDescribe() == null ? other.getDescribe() == null : this.getDescribe().equals(other.getDescribe()))
-            && (this.getCreateTime() == null ? other.getCreateTime() == null : this.getCreateTime().equals(other.getCreateTime()))
-            && (this.getUpdateTime() == null ? other.getUpdateTime() == null : this.getUpdateTime().equals(other.getUpdateTime()))
-            && (this.getDelFlag() == null ? other.getDelFlag() == null : this.getDelFlag().equals(other.getDelFlag()));
-    }
 
     @Override
     public int hashCode() {

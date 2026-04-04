@@ -4,13 +4,16 @@ import lombok.Data;
 
 import java.util.Date;
 
+/**
+ * 短链接更新请求DTO
+ */
 @Data
-public class ShortLinkCreateRequest {
+public class ShortLinkUpdateRequest {
 
     /**
-     * 域名
+     * 完整短链接
      */
-    private String domain;
+    private String fullShortUrl;
 
     /**
      * 原始链接
@@ -21,11 +24,6 @@ public class ShortLinkCreateRequest {
      * 分组标识
      */
     private String gid;
-
-    /**
-     * 创建类型 0：控制台 1：接口
-     */
-    private Integer createdType;
 
     /**
      * 有效期类型 0：永久有效 1：用户自定义
@@ -41,9 +39,4 @@ public class ShortLinkCreateRequest {
      * 描述
      */
     private String describe;
-
-    /**
-     * 创建者用户名
-     */
-    private String username;
 }

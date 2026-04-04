@@ -20,4 +20,14 @@ public class RBloomFilterConfiguration {
         cachePenetrationBloomFilter.tryInit(100000000L, 0.00001);
         return cachePenetrationBloomFilter;
     }
+
+    /**
+     * 防止短链创建查询数据库的布隆过滤器
+     */
+    @Bean
+    public RBloomFilter<String> shortLinkCreateCachePenetrationBloomFilter(RedissonClient redissonClient) {
+        RBloomFilter<String> cachePenetrationBloomFilter = redissonClient.getBloomFilter("shortLinkCreateCachePenetrationBloomFilter");
+        cachePenetrationBloomFilter.tryInit(100000000L, 0.00001);
+        return cachePenetrationBloomFilter;
+    }
 }

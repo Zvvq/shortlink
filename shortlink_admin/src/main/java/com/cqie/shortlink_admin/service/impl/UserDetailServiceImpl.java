@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import static com.cqie.shortlink_admin.common.convention.errorcode.BaseErrorCode.USERNAME_NULL_ERROR;
@@ -20,6 +21,7 @@ import static com.cqie.shortlink_admin.common.convention.errorcode.BaseErrorCode
 public class UserDetailServiceImpl implements UserDetailsService{
 
     private final TUserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
 
     @Override

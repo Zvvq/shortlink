@@ -1,9 +1,9 @@
 package com.cqie.shortlink_project.common.convention.result;
 
 
-import com.cqie.shortlink_admin.common.convention.errorcode.BaseErrorCode;
-import com.cqie.shortlink_admin.common.convention.errorcode.IErrorCode;
-import com.cqie.shortlink_admin.common.convention.exception.AbstractException;
+import com.cqie.shortlink_project.common.convention.errorcode.BaseErrorCode;
+import com.cqie.shortlink_project.common.convention.errorcode.IErrorCode;
+import com.cqie.shortlink_project.common.convention.exception.AbstractException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

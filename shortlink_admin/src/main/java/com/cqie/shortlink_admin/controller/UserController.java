@@ -8,6 +8,7 @@ import com.cqie.shortlink_admin.dto.response.UserActualResponseDTO;
 import com.cqie.shortlink_admin.dto.response.UserResponseDTO;
 import com.cqie.shortlink_admin.service.UserService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,21 +21,21 @@ public class UserController {
 
     /**
      * 获取根据用户名用户信息
-     * @param username 用户名
      * @return 用户信息
      */
-    @GetMapping("/{username}")
-    public Result<UserResponseDTO> getUserInfo(@PathVariable String username) {
+    @GetMapping("/info")
+    public Result<UserResponseDTO> getUserInfo() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return  Result.success(userService.getUserByUsername(username));
     }
 
     /**
      * 获取实际用户信息
-     * @param username 用户名
      * @return 用户信息
      */
-    @GetMapping("/actual/{username}")
-    public Result<UserActualResponseDTO> getActualUserInfo(@PathVariable String username) {
+    @GetMapping("/actual")
+    public Result<UserActualResponseDTO> getActualUserInfo() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return Result.success(BeanUtil.toBean(userService.getUserByUsername(username), UserActualResponseDTO.class));
     }
 

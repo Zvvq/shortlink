@@ -1,11 +1,14 @@
-package com.cqie.shortlink_project.dto.request;
+package com.cqie.shortlink_admin.dto.request;
 
 import lombok.Data;
 
 import java.util.Date;
 
+/**
+ * 短链接创建请求DTO
+ */
 @Data
-public class ShortLinkCreateRequest {
+public class ShortLinkCreateRequestDTO {
 
     /**
      * 域名

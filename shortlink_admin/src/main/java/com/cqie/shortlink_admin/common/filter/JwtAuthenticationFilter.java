@@ -30,9 +30,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     private JwtUtil jwtUtil;
 
     @Autowired
-    private RedisUtil redisUtil;
-
-    @Autowired
     private ObjectMapper objectMapper;
 
 

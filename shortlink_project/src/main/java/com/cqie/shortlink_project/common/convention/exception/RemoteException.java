@@ -1,7 +1,8 @@
 package com.cqie.shortlink_project.common.convention.exception;
 
-import com.cqie.shortlink_admin.common.convention.errorcode.BaseErrorCode;
-import com.cqie.shortlink_admin.common.convention.errorcode.IErrorCode;
+
+import com.cqie.shortlink_project.common.convention.errorcode.BaseErrorCode;
+import com.cqie.shortlink_project.common.convention.errorcode.IErrorCode;
 
 /**
  * 远程服务调用异常
