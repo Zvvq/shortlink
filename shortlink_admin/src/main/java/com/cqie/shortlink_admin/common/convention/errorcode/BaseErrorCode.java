@@ -26,6 +26,10 @@ public enum BaseErrorCode implements IErrorCode {
 
     GROUP_SAVE_ERROR("A000156", "用户组保存失败"),
     GROUP_SAVE_COUNT_ERROR("A000157", "用户组保存数量超出限制"),
+    GROUP_NOT_EXIST_ERROR("A000158", "用户组不存在"),
+    GROUP_UPDATE_ERROR("A000159", "用户组更新失败"),
+    GROUP_DELETE_ERROR("A000160", "用户组删除失败"),
+    GROUP_SORT_ERROR("A000161", "用户组排序失败"),
 
     // ========== 二级宏观错误码 系统请求缺少幂等Token ==========
     IDEMPOTENT_TOKEN_NULL_ERROR("A000200", "幂等Token为空"),
