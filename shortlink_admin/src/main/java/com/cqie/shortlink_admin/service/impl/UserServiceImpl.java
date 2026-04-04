@@ -18,6 +18,7 @@ import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -78,20 +79,20 @@ public class UserServiceImpl extends ServiceImpl<TUserMapper, UserDO>
         // 使用authenticationManager进行认证
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 requestParam.getUsername(), requestParam.getPassword());
-        Authentication authenticate = authenticationManager.authenticate(authenticationToken);
+        try {
+            Authentication authenticate = authenticationManager.authenticate(authenticationToken);
 
+            //认证通过
+            SecurityContextHolder.getContext().setAuthentication(authenticate);
 
-        if (authenticate == null) {
+            String token = JwtUtil.generateToken(requestParam.getUsername());
+            redisUtil.setJti(JwtUtil.extractJti(token), requestParam.getUsername(), 7200L);
+
+            return "Bearer " + token;
+        } catch (BadCredentialsException e) {
+            // 用户名或密码错误
             throw new ClientException(USER_LOGIN_ERROR);
         }
-        //认证通过
-
-        SecurityContextHolder.getContext().setAuthentication(authenticate);
-
-        String token = JwtUtil.generateToken(requestParam.getUsername());
-        redisUtil.setJti(JwtUtil.extractJti( token), requestParam.getUsername(), 7200L);
-
-        return token;
 
     }
 
