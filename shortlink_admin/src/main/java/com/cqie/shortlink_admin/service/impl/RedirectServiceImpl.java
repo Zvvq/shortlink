@@ -22,6 +22,8 @@ public class RedirectServiceImpl implements RedirectService {
      */
     @Override
     public void redirect(String shortUrl, HttpServletRequest request, HttpServletResponse response) {
+
+        //TODO 添加缓存
         ShortLinkDO shortLink = shortLinkMapper.selectOne(
                 new LambdaQueryWrapper<ShortLinkDO>()
                         .eq(ShortLinkDO::getShortUri, shortUrl)
