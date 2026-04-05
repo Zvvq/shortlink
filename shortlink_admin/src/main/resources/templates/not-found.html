@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>404 - 页面未找到 | 简约提示</title>
+    <style>
+        /* 重置所有边距，采用极简的CSS重置，保证纯粹背景与留白 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 极度简约：纯白背景，灰黑色文字，无多余阴影渐变，无复杂装饰 */
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', Helvetica, sans-serif;
+            background-color: #ffffff;
+            color: #1a1a1a;
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        /* 主容器：极简留白，干净无框，靠排版传递层次 */
+        .error-container {
+            max-width: 540px;
+            width: 100%;
+            text-align: center;
+            background: transparent;
+        }
+
+        /* 巨大404数字 —— 极细、轻盈，用字重和间距强调缺失感，而非压迫感 */
+        .error-code {
+            font-size: 10rem;
+            font-weight: 300;
+            letter-spacing: -0.025em;
+            line-height: 1;
+            color: #2c2c2c;
+            margin-bottom: 1.25rem;
+            font-feature-settings: "tnum";
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 简洁的标题，纤细且克制 */
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 450;
+            margin-bottom: 1rem;
+            color: #111111;
+            letter-spacing: -0.2px;
+        }
+
+        /* 友好提示段落组：清晰分段，行距舒适，颜色柔和但保持可读性 */
+        .message-group {
+            margin-bottom: 2rem;
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .friendly-message {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #4b5563;
+            margin-bottom: 0.75rem;
+        }
+
+        /* 提示细项列表 —— 极简无标点符号前置，纯文本换行 */
+        .hint-list {
+            margin-top: 1rem;
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .hint-list li {
+            font-size: 0.9rem;
+            color: #5b6b7c;
+            font-weight: 380;
+            letter-spacing: 0.01em;
+        }
+
+        /* 轻柔分割线，若有若无，保持呼吸感 */
+        .divider {
+            width: 48px;
+            height: 1px;
+            background-color: #e5e7eb;
+            margin: 1.5rem auto 1.5rem auto;
+        }
+
+        /* 极简按钮 —— 无边框无背景，仅靠细微的文字颜色变化与下划线 */
+        .home-link {
+            display: inline-block;
+            font-size: 0.95rem;
+            font-weight: 460;
+            color: #3b6e8b;
+            text-decoration: none;
+            border-bottom: 1px solid #cbdde8;
+            transition: border-color 0.2s ease, color 0.2s ease;
+            padding-bottom: 2px;
+        }
+
+        /* 悬停时加深边界，提升交互而不失简约 */
+        .home-link:hover {
+            color: #1c4e6b;
+            border-bottom-color: #1c4e6b;
+        }
+
+        /* 为了极致简洁，也提供一个极简的备用返回操作(但无多余装饰) */
+        .return-note {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-top: 2rem;
+            letter-spacing: 0.2px;
+        }
+
+        /* 响应式微调，确保在手机上也保持宽敞留白 */
+        @media (max-width: 560px) {
+            .error-code {
+                font-size: 6rem;
+            }
+            .error-title {
+                font-size: 1.25rem;
+            }
+            .friendly-message {
+                font-size: 0.9rem;
+            }
+            .hint-list li {
+                font-size: 0.85rem;
+            }
+            .error-container {
+                padding: 0 0.5rem;
+            }
+        }
+
+        /* 极度简约：移除任何多余的轮廓高亮（保留可用性但无装饰） */
+        a:focus-visible {
+            outline: 1px solid #7f9fb5;
+            outline-offset: 2px;
+            border-radius: 0;
+        }
+    </style>
+</head>
+<body>
+<div class="error-container" role="main" aria-label="404错误提示：页面不存在">
+    <!-- 大数字404：极轻视觉焦点 -->
+    <div class="error-code" aria-hidden="true">404</div>
+
+    <!-- 简约标题：直接点明状态 -->
+    <h1 class="error-title">链接无法访问</h1>
+
+    <!-- 友好提示块：涵盖所有需要提醒用户的信息（链接不存在、检查正确性、可能被禁用或删除）-->
+    <div class="message-group">
+        <p class="friendly-message">
+            您正在尝试访问的页面不存在或已失效。
+        </p>
+        <ul class="hint-list">
+            <li>👉 请检查链接地址是否输入完整且正确</li>
+            <li>👉 该链接可能已被网站管理员禁用</li>
+            <li>👉 或者原内容已被删除，不再可用</li>
+        </ul>
+    </div>
+
+    <!-- 细微分割线，让返回导航独立不突兀 -->
+    <div class="divider" aria-hidden="true"></div>
+
+    <!-- 唯一主操作：返回首页，极度克制，无按钮框线，只有干净的文字链接 -->
+    <div>
+        <a href="/" class="home-link">← 返回首页</a>
+    </div>
+
+    <!-- 极简小提示，辅助用户理解下一步 (可选但保持友好氛围) -->
+    <div class="return-note">
+        若您确认链接无误，请联系网站管理员
+    </div>
+</div>
+</body>
+</html>
