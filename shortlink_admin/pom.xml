@@ -46,9 +46,9 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.cqie</groupId>
-            <artifactId>shortlink</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-client</artifactId>
+            <version>5.4.0</version>
         </dependency>
 
         <dependency>
