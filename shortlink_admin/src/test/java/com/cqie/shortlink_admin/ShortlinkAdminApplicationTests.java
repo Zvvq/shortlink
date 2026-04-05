@@ -3,6 +3,7 @@ package com.cqie.shortlink_admin;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.cqie.shortlink_admin.util.JwtUtil;
 import org.junit.jupiter.api.Test;
+import org.redisson.api.RBloomFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -14,6 +15,10 @@ class ShortlinkAdminApplicationTests {
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
+
+    @Autowired
+    private RBloomFilter<String> shortLinkCreateCachePenetrationBloomFilter;
+
 
     @Test
     void contextLoads() {
@@ -35,6 +40,8 @@ class ShortlinkAdminApplicationTests {
     void testStringUtils() {
         String string = redisTemplate.opsForValue().get("132");
         System.out.println(string);
+
+        shortLinkCreateCachePenetrationBloomFilter.add("skxj6U");
 
     }
 

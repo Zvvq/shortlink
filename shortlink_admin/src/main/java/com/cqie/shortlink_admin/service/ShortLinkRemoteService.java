@@ -13,6 +13,7 @@ import com.cqie.shortlink_admin.dto.response.ShortLinkCreateResponseDTO;
 import com.cqie.shortlink_admin.dto.response.ShortLinkPageResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RBloomFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -33,12 +34,15 @@ public class ShortLinkRemoteService {
     @Value("${shortlink.project.url:http://localhost:8081}")
     private String projectUrl;
 
+    private final RBloomFilter<String> shortLinkCreateCachePenetrationBloomFilter;
+
     /**
      * 创建短链接
      * @param requestDTO 创建请求参数
      * @return 创建结果
      */
     public ShortLinkCreateResponseDTO createShortLink(ShortLinkCreateRequestDTO requestDTO) {
+
         String url = projectUrl + "/api/shortlink/v1/link/create";
         
         // 将DTO转换为Map
