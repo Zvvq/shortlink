@@ -15,6 +15,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import javax.xml.crypto.Data;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -88,7 +89,9 @@ public class RedirectServiceImpl implements RedirectService {
             ShortLinkDO shortLink = shortLinkMapper.selectOne(
                     new LambdaQueryWrapper<ShortLinkDO>()
                             .eq(ShortLinkDO::getShortUri, shortUrl)
-                            .eq(ShortLinkDO::getEnableStatus, 0)
+                            .eq(ShortLinkDO::getEnableStatus, 1)// 判断是否启用
+                            .gt(ShortLinkDO::getValidDate, LocalDateTime.now())// 判断是否过期
+
             );
             dbQueryCount.incrementAndGet();
 
