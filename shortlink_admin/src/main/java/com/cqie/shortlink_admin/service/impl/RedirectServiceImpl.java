@@ -58,71 +58,56 @@ public class RedirectServiceImpl implements RedirectService {
     @Override
     public void redirect(String shortUrl, HttpServletRequest request, HttpServletResponse response) {
         long requestNum = totalRequestCount.incrementAndGet();
-        String threadName = Thread.currentThread().getName();
-        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS"));
-
-        log.info("[请求:{}] [{}] 线程:{} 开始处理短链: {}", requestNum, time, threadName, shortUrl);
 
         // 从缓存中获取短链对应的长链
         if (checkShortLinkCache(shortUrl, response)) {
-            log.info("[请求:{}] [{}] 线程:{} 缓存命中,直接返回", requestNum, time, threadName);
+            log.debug("[请求:{}] 缓存命中: {}", requestNum, shortUrl);
             return;
         }
 
-        //没有则查询布隆过滤器，判断数据库是否存在
+        // 查询布隆过滤器
         if (!shortLinkCreateCachePenetrationBloomFilter.contains(shortUrl)) {
             bloomFilterMissCount.incrementAndGet();
-            log.warn("[请求:{}] [{}] 线程:{} 布隆过滤器判定不存在: {}", requestNum, time, threadName, shortUrl);
+            log.warn("[请求:{}] 布隆过滤器拦截: {}", requestNum, shortUrl);
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
-        // 查询数据库
-        log.info("[请求:{}] [{}] 线程:{} 尝试获取锁...", requestNum, time, threadName);
+        // 获取分布式锁
         RLock lock = redissonClient.getLock(LOCK_SHORT_LINK_REBUILD + shortUrl);
         lockWaitCount.incrementAndGet();
         lock.lock();
         try {
-            log.info("[请求:{}] [{}] 线程:{} 获取锁成功,执行double-check", requestNum, time, threadName);
-            //double-check
+            // double-check
             if (checkShortLinkCache(shortUrl, response)) {
-                log.info("[请求:{}] [{}] 线程:{} double-check缓存命中", requestNum, time, threadName);
                 return;
             }
 
             // 查询数据库
-            log.info("[请求:{}] [{}] 线程:{} 查询数据库...", requestNum, time, threadName);
             ShortLinkDO shortLink = shortLinkMapper.selectOne(
                     new LambdaQueryWrapper<ShortLinkDO>()
                             .eq(ShortLinkDO::getShortUri, shortUrl)
-                            .eq(ShortLinkDO::getEnableStatus, 1)// 判断是否启用
-                            .gt(ShortLinkDO::getValidDate, LocalDateTime.now())// 判断是否过期
-
+                            .eq(ShortLinkDO::getEnableStatus, 1)
+                            .gt(ShortLinkDO::getValidDate, LocalDateTime.now())
             );
             dbQueryCount.incrementAndGet();
 
-            // 如果数据库中不存在该短链，则返回404
             if (shortLink == null) {
-                log.warn("[请求:{}] [{}] 线程:{} 数据库中不存在该短链: {}", requestNum, time, threadName, shortUrl);
+                log.warn("[请求:{}] 短链不存在: {}", requestNum, shortUrl);
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                // 缓存短链不存在的信息，解决布隆过滤器误判的问题
                 redisTemplate.opsForValue().set(CACHE_SHORT_LINK + shortUrl, "", 5 * 60 * 1000);
                 return;
             }
-            //重建缓存
-            log.info("[请求:{}] [{}] 线程:{} 重建缓存,原始链接: {}", requestNum, time, threadName, shortLink.getOriginUrl());
-            redisTemplate.opsForValue().set(CACHE_SHORT_LINK + shortUrl, shortLink.getOriginUrl());
 
-            // 进行302重定向到原始链接
+            // 重建缓存并重定向
+            redisTemplate.opsForValue().set(CACHE_SHORT_LINK + shortUrl, shortLink.getOriginUrl());
             response.setStatus(HttpServletResponse.SC_FOUND);
             response.setHeader("Location", shortLink.getOriginUrl());
-
-            //统计
             statsLinkAccess(shortUrl);
-            log.info("[请求:{}] [{}] 线程:{} 重定向成功", requestNum, time, threadName);
+
+            log.info("[请求:{}] 重定向成功: {} -> {}", requestNum, shortUrl, shortLink.getOriginUrl());
         } finally {
             lock.unlock();
-            log.info("[请求:{}] [{}] 线程:{} 释放锁", requestNum, time, threadName);
         }
     }
 
