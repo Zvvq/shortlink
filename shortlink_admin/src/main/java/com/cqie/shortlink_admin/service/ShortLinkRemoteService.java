@@ -45,22 +45,24 @@ public class ShortLinkRemoteService {
 
         String url = projectUrl + "/api/shortlink/v1/link/create";
         
-        // 将DTO转换为Map
-        Map<String, Object> paramMap = new HashMap<>();
-        paramMap.put("domain", requestDTO.getDomain());
-        paramMap.put("originUrl", requestDTO.getOriginUrl());
-        paramMap.put("gid", requestDTO.getGid());
-        paramMap.put("createdType", requestDTO.getCreatedType());
-        paramMap.put("validDateType", requestDTO.getValidDateType());
-        paramMap.put("validDate", requestDTO.getValidDate());
-        paramMap.put("describe", requestDTO.getDescribe());
-        paramMap.put("username", requestDTO.getUsername());
-        
-        // 发送POST请求
-        String result = HttpUtil.post(url, paramMap);
+        // 发送POST请求，使用JSON格式
+        String jsonBody = JSONUtil.toJsonStr(requestDTO);
+        String result = HttpRequest.post(url)
+                .header("Content-Type", "application/json")
+                .body(jsonBody)
+                .execute()
+                .body();
         
         // 解析响应
-        return parseCreateResponse(result);
+        ShortLinkCreateResponseDTO responseDTO = parseCreateResponse(result);
+        
+        // 创建成功，添加到布隆过滤器
+        if (responseDTO != null && responseDTO.getFullShortUrl() != null) {
+            shortLinkCreateCachePenetrationBloomFilter.add(responseDTO.getFullShortUrl());
+            log.info("短链接创建成功，已添加到布隆过滤器: {}", responseDTO.getFullShortUrl());
+        }
+        
+        return responseDTO;
     }
 
     /**
@@ -80,7 +82,7 @@ public class ShortLinkRemoteService {
         paramMap.put("describe", requestDTO.getDescribe());
         
         // 发送PUT请求
-        HttpRequest.put(url)
+        HttpResponse execute = HttpRequest.put(url)
                 .body(JSONUtil.toJsonStr(paramMap))
                 .execute();
     }
