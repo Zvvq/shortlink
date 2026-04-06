@@ -1,8 +1,11 @@
 package com.cqie.shortlink_admin.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.cqie.shortlink_admin.entity.LinkAccessStatsDO;
 import com.cqie.shortlink_admin.entity.ShortLinkDO;
+import com.cqie.shortlink_admin.mapper.LinkAccessStatsMapper;
 import com.cqie.shortlink_admin.mapper.ShortLinkMapper;
 import com.cqie.shortlink_admin.service.RedirectService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Service;
 import javax.xml.crypto.Data;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -36,6 +40,8 @@ public class RedirectServiceImpl implements RedirectService {
     private final RedissonClient redissonClient;
 
     private final RBloomFilter<String> shortLinkCreateCachePenetrationBloomFilter;
+
+    private final LinkAccessStatsMapper linkAccessStatsMapper;
 
     // 并发统计
     private final AtomicLong totalRequestCount = new AtomicLong(0);
@@ -58,7 +64,7 @@ public class RedirectServiceImpl implements RedirectService {
         log.info("[请求:{}] [{}] 线程:{} 开始处理短链: {}", requestNum, time, threadName, shortUrl);
 
         // 从缓存中获取短链对应的长链
-        if (checkShortLinkCache(shortUrl, response, requestNum, threadName)) {
+        if (checkShortLinkCache(shortUrl, response)) {
             log.info("[请求:{}] [{}] 线程:{} 缓存命中,直接返回", requestNum, time, threadName);
             return;
         }
@@ -79,7 +85,7 @@ public class RedirectServiceImpl implements RedirectService {
         try {
             log.info("[请求:{}] [{}] 线程:{} 获取锁成功,执行double-check", requestNum, time, threadName);
             //double-check
-            if (checkShortLinkCache(shortUrl, response, requestNum, threadName)) {
+            if (checkShortLinkCache(shortUrl, response)) {
                 log.info("[请求:{}] [{}] 线程:{} double-check缓存命中", requestNum, time, threadName);
                 return;
             }
@@ -110,6 +116,9 @@ public class RedirectServiceImpl implements RedirectService {
             // 进行302重定向到原始链接
             response.setStatus(HttpServletResponse.SC_FOUND);
             response.setHeader("Location", shortLink.getOriginUrl());
+
+            //统计
+            statsLinkAccess(shortUrl);
             log.info("[请求:{}] [{}] 线程:{} 重定向成功", requestNum, time, threadName);
         } finally {
             lock.unlock();
@@ -117,12 +126,20 @@ public class RedirectServiceImpl implements RedirectService {
         }
     }
 
-    private boolean checkShortLinkCache(String shortUrl, HttpServletResponse response, long requestNum, String threadName) {
+    /**
+     * 检查短链缓存
+     * @param shortUrl 短链
+     * @param response 响应
+     * @return 是否命中缓存
+     */
+    private boolean checkShortLinkCache(String shortUrl, HttpServletResponse response) {
         String originUrl = redisTemplate.opsForValue().get(CACHE_SHORT_LINK + shortUrl);
         if (StringUtils.isNotBlank(originUrl)) {
             cacheHitCount.incrementAndGet();
             response.setStatus(HttpServletResponse.SC_FOUND);
             response.setHeader("Location", originUrl);
+            //统计
+            statsLinkAccess(shortUrl);
             return true;
         }
 
@@ -134,17 +151,25 @@ public class RedirectServiceImpl implements RedirectService {
         return false;
     }
 
+
     /**
-     * 获取并发统计信息
+     * 统计短链访问量
+     * @param shortUrl 短链
      */
-    public String getStats() {
-        return String.format(
-            "并发统计: 总请求=%d, 缓存命中=%d, 布隆过滤=%d, 数据库查询=%d, 锁等待=%d",
-            totalRequestCount.get(),
-            cacheHitCount.get(),
-            bloomFilterMissCount.get(),
-            dbQueryCount.get(),
-            lockWaitCount.get()
-        );
+    private void statsLinkAccess(String shortUrl) {
+        // 统计访问量
+        Date now = DateUtil.date();
+        LinkAccessStatsDO linkAccessStats = LinkAccessStatsDO.builder()
+                .gid("default")
+                .pv(1)
+                .uv(1)
+                .uip(1)
+                .date(now)
+                .fullShortUrl(shortUrl)
+                .hour(DateUtil.hour(now, true))
+                .weekday(DateUtil.dayOfWeekEnum(now).getIso8601Value())
+                .build();
+
+        linkAccessStatsMapper.statsLinkAccess(linkAccessStats);
     }
 }
