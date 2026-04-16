@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import javax.xml.crypto.Data;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
@@ -154,12 +155,15 @@ public class RedirectServiceImpl implements RedirectService {
         // 统计uv，先从cookie中获取uvId，如果没有则生成一个新的uvId并设置cookie
         Cookie[] cookies = request.getCookies();
         String uvId = null;
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("_uv_id_")) {
-                uvId = cookie.getValue();
-                break;
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("_uv_id_".equals(cookie.getName())) {
+                    uvId = cookie.getValue();
+                    break;
+                }
             }
         }
+
         // 没有cookie，说明是新用户，生成一个新的uvId并设置cookie
         if (uvId == null) {
             uvId = generateUvId();
@@ -172,9 +176,13 @@ public class RedirectServiceImpl implements RedirectService {
             response.addCookie(cookie);
         }
 
-        Date now = DateUtil.date();
-        redisTemplate.opsForHyperLogLog().add("short-link:uv:" + shortUrl + ":" + DateUtil.formatDate(now), uvId);
-        redisTemplate.opsForValue().increment("short-link:pv:" + shortUrl + ":" + DateUtil.formatDate(now));
+        LocalDateTime now = LocalDateTime.now();
+        String hourKey = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH"));
+        String dayKey = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        redisTemplate.opsForHyperLogLog().add("short-link:uv:" + shortUrl + ":" + hourKey, uvId);
+        redisTemplate.opsForValue().increment("short-link:pv:" + shortUrl + ":" + hourKey);
+        redisTemplate.opsForHyperLogLog().add("short-link:uv:" + shortUrl + ":" + dayKey, uvId);
+        redisTemplate.opsForValue().increment("short-link:pv:" + shortUrl + ":" + dayKey);
 
 
 //        LinkAccessStatsDO linkAccessStats = LinkAccessStatsDO.builder()
