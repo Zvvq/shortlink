@@ -42,8 +42,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         String requestURI = request.getRequestURI();
 
 
-        log.info("请求URI：{}", requestURI);
-
         // 公开接口
         if (isPublicPath(requestURI)) {
             filterChain.doFilter(request, response);
@@ -52,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
         // 检查jwt是否为空
         if (jwt == null) {
-            log.info("缺少认证令牌");
+            log.info("缺少认证令牌,请求URI：{}", requestURI);
             sendUnauthorizedResponse(response, "缺少认证令牌");
             return;
         }
@@ -60,7 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
         // 检查令牌是否有效
         if (!jwtUtil.validateToken(jwt)) {
-            log.info("令牌无效或已过期");
+            log.info("令牌无效或已过期,请求URI：{}", requestURI);
             sendUnauthorizedResponse(response, "令牌无效或已过期");
             return;
         }
