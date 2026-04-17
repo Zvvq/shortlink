@@ -14,15 +14,15 @@ public class IdempotentUtil {
 
 
     /**
-     * 检查消息消费是否重复
+     * 检查消息消费是否消费过
      * @param businessKey 业务键
      * @param msgId 消息ID
-     * @return true 表示消息消费不重复，false 表示消息消费重复
+     * @return true 消息被消费过，false 消息没有被消费过
      */
     public boolean checkIdempotent(String businessKey, String msgId) {
         // 原子 SETNX + 过期时间
-        return Boolean.TRUE.equals(
-                redisTemplate.opsForValue().setIfAbsent(businessKey+ ":" + msgId, "1", 24, TimeUnit.HOURS)
+        return !Boolean.TRUE.equals(
+                redisTemplate.opsForValue().setIfAbsent(businessKey + ":" + msgId, "1", 24, TimeUnit.HOURS)
         );
     }
 }
