@@ -54,7 +54,7 @@ public class ShortLinkRemoteServiceImpl implements ShortLinkRemoteService {
 
         // 创建成功，添加到布隆过滤器
         if (responseDTO != null && responseDTO.getFullShortUrl() != null) {
-            shortLinkCreateCachePenetrationBloomFilter.add(responseDTO.getFullShortUrl());
+            shortLinkCreateCachePenetrationBloomFilter.add(responseDTO.getShortUri());
             log.info("短链接创建成功，已添加到布隆过滤器: {}", responseDTO.getFullShortUrl());
         }
 
