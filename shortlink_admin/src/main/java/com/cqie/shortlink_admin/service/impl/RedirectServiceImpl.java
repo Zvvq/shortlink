@@ -3,6 +3,8 @@ package com.cqie.shortlink_admin.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.cqie.shortlink_admin.common.constant.RocketMQConstant;
+
+import com.cqie.shortlink_admin.dto.message.StatsMessage;
 import com.cqie.shortlink_admin.entity.ShortLinkDO;
 import com.cqie.shortlink_admin.mapper.ShortLinkMapper;
 import com.cqie.shortlink_admin.service.RedirectService;
@@ -172,24 +174,15 @@ public class RedirectServiceImpl implements RedirectService {
             response.addCookie(cookie);
         }
 
-//        LocalDateTime now = LocalDateTime.now();
-//        String hourKey = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH"));
-//        String dayKey = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-//        redisTemplate.opsForHyperLogLog().add("short-link:uv:" + shortUrl + ":" + hourKey, uvId);
-//        redisTemplate.opsForValue().increment("short-link:pv:" + shortUrl + ":" + hourKey);
-//        redisTemplate.opsForHyperLogLog().add("short-link:uv:" + shortUrl + ":" + dayKey, uvId);
-//        redisTemplate.opsForValue().increment("short-link:pv:" + shortUrl + ":" + dayKey);
-//
-//    }
-
-
         LocalDateTime now = LocalDateTime.now();
         // 构建访问统计消息
-        HashMap<String, String> msg = new HashMap<>();
-        msg.put("shortUrl", shortUrl);
-        msg.put("uvId", uvId);
-        msg.put("accessTime", now.toString());
-        rocketMQTemplate.asyncSend(RocketMQConstant.SHORT_LINK_STATES_TOPIC, msg,
+        StatsMessage message = StatsMessage.builder()
+                .shortUrl(shortUrl)
+                .uvId(uvId)
+                .accessTime(now)
+                .build();
+
+        rocketMQTemplate.asyncSend(RocketMQConstant.SHORT_LINK_STATES_TOPIC, message,
                 new SendCallback() {
                     @Override
                     public void onSuccess(SendResult sendResult) {
