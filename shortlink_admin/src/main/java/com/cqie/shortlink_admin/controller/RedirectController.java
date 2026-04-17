@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequiredArgsConstructor
@@ -19,5 +21,11 @@ public class RedirectController {
     @GetMapping("/{shortUrl}")
     public void redirect(@PathVariable String shortUrl, HttpServletRequest request, HttpServletResponse response) {
         redirectService.redirect(shortUrl, request, response);
+    }
+
+    @ResponseBody
+    @GetMapping("/test")
+    public String test() {
+        return "test";
     }
 }
