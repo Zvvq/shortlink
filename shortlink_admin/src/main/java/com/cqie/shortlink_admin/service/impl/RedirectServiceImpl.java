@@ -1,11 +1,9 @@
 package com.cqie.shortlink_admin.service.impl;
 
-import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.cqie.shortlink_admin.entity.LinkAccessStatsDO;
+import com.cqie.shortlink_admin.common.constant.RocketMQConstant;
 import com.cqie.shortlink_admin.entity.ShortLinkDO;
-import com.cqie.shortlink_admin.mapper.LinkAccessStatsMapper;
 import com.cqie.shortlink_admin.mapper.ShortLinkMapper;
 import com.cqie.shortlink_admin.service.RedirectService;
 import jakarta.servlet.http.Cookie;
@@ -13,17 +11,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.client.producer.SendCallback;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
-import javax.xml.crypto.Data;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -37,14 +37,11 @@ import static com.cqie.shortlink_admin.common.constant.RedisCacheConstant.LOCK_S
 public class RedirectServiceImpl implements RedirectService {
 
     private final ShortLinkMapper shortLinkMapper;
-
     private final RedisTemplate<String, String> redisTemplate;
-
     private final RedissonClient redissonClient;
-
     private final RBloomFilter<String> shortLinkCreateCachePenetrationBloomFilter;
+    private final RocketMQTemplate rocketMQTemplate;
 
-    private final LinkAccessStatsMapper linkAccessStatsMapper;
 
     // 并发统计
     private final AtomicLong totalRequestCount = new AtomicLong(0);
@@ -130,7 +127,6 @@ public class RedirectServiceImpl implements RedirectService {
             cacheHitCount.incrementAndGet();
             //统计
             statsLinkAccess(shortUrl, request, response);
-
             response.setStatus(HttpServletResponse.SC_FOUND);
             response.setHeader("Location", originUrl);
 
@@ -168,35 +164,45 @@ public class RedirectServiceImpl implements RedirectService {
         if (uvId == null) {
             uvId = generateUvId();
             Cookie cookie = new Cookie("_uv_id_", uvId);
-            cookie.setPath("/");
-            cookie.setMaxAge(365 * 24 * 3600);
-            cookie.setHttpOnly(true);
+            cookie.setPath("/");// 设置cookie的路径为根路径
+            cookie.setMaxAge(365 * 24 * 3600);// 设置cookie的过期时间为一年
+            cookie.setHttpOnly(true);// 设置cookie只能通过http访问，不能通过js访问
             // 根据情况选择是否设置Secure属性,HTTPS环境下建议设置为true
 //            cookie.setSecure(request.isSecure());
             response.addCookie(cookie);
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        String hourKey = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH"));
-        String dayKey = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        redisTemplate.opsForHyperLogLog().add("short-link:uv:" + shortUrl + ":" + hourKey, uvId);
-        redisTemplate.opsForValue().increment("short-link:pv:" + shortUrl + ":" + hourKey);
-        redisTemplate.opsForHyperLogLog().add("short-link:uv:" + shortUrl + ":" + dayKey, uvId);
-        redisTemplate.opsForValue().increment("short-link:pv:" + shortUrl + ":" + dayKey);
-
-
-//        LinkAccessStatsDO linkAccessStats = LinkAccessStatsDO.builder()
-//                .gid("default")
-//                .pv(1)
-//                .uv(1)
-//                .uip(1)
-//                .date(now)
-//                .fullShortUrl(shortUrl)
-//                .hour(DateUtil.hour(now, true))
-//                .weekday(DateUtil.dayOfWeekEnum(now).getIso8601Value())
-//                .build();
+//        LocalDateTime now = LocalDateTime.now();
+//        String hourKey = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH"));
+//        String dayKey = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+//        redisTemplate.opsForHyperLogLog().add("short-link:uv:" + shortUrl + ":" + hourKey, uvId);
+//        redisTemplate.opsForValue().increment("short-link:pv:" + shortUrl + ":" + hourKey);
+//        redisTemplate.opsForHyperLogLog().add("short-link:uv:" + shortUrl + ":" + dayKey, uvId);
+//        redisTemplate.opsForValue().increment("short-link:pv:" + shortUrl + ":" + dayKey);
 //
-//        linkAccessStatsMapper.statsLinkAccess(linkAccessStats);
+//    }
+
+
+        LocalDateTime now = LocalDateTime.now();
+        // 构建访问统计消息
+        HashMap<String, String> msg = new HashMap<>();
+        msg.put("shortUrl", shortUrl);
+        msg.put("uvId", uvId);
+        msg.put("accessTime", now.toString());
+        rocketMQTemplate.asyncSend(RocketMQConstant.SHORT_LINK_STATES_TOPIC, msg,
+                new SendCallback() {
+                    @Override
+                    public void onSuccess(SendResult sendResult) {
+                    }
+
+                    @Override
+                    public void onException(Throwable throwable) {
+                        log.error("发送访问统计消息失败: {}", throwable.getMessage(), throwable);
+                    }
+                }
+
+
+        );
     }
 
     /**
