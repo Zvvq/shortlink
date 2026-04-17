@@ -30,6 +30,18 @@ spring:
       add-mappings: false
 
 
+#更改日志级别
+logging:
+  level:
+    com.shortlink: debug
+
+
+rocketmq:
+  name-server: 127.0.0.1:9876 # RocketMQ NameServer 地址
+  producer:
+    group: short-link-producer-group  # 生产者组名
+
+
 
 
 mybatis-plus:
