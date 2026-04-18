@@ -48,12 +48,21 @@ public class AccessStatsConsumer implements RocketMQListener<MessageExt> {
         String uvId = statesMessage.getUvId();
         LocalDateTime now = statesMessage.getAccessTime();
 
-        String hourKey = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH"));
+        // 提取日期和小时
         String dayKey = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        redisTemplate.opsForHyperLogLog().add("short-link:uv:" + shortUrl + ":" + hourKey, uvId);
-        redisTemplate.opsForValue().increment("short-link:pv:" + shortUrl + ":" + hourKey);
-        redisTemplate.opsForHyperLogLog().add("short-link:uv:" + shortUrl + ":" + dayKey, uvId);
-        redisTemplate.opsForValue().increment("short-link:pv:" + shortUrl + ":" + dayKey);
+        String hour = now.format(DateTimeFormatter.ofPattern("HH"));   // 只取小时
+
+        // 构建新格式的 Key
+        String pvDayKey = "short-link:pv:" + dayKey + ":" + shortUrl;
+        String pvHourKey = "short-link:pv:" + dayKey + ":" + hour + ":" + shortUrl;
+        String uvDayKey = "short-link:uv:" + dayKey + ":" + shortUrl;
+        String uvHourKey = "short-link:uv:" + dayKey + ":" + hour + ":" + shortUrl;
+
+        // 执行写入操作
+        redisTemplate.opsForHyperLogLog().add(uvHourKey, uvId);
+        redisTemplate.opsForValue().increment(pvHourKey);
+        redisTemplate.opsForHyperLogLog().add(uvDayKey, uvId);
+        redisTemplate.opsForValue().increment(pvDayKey);
     }
 
     private StatsMessage deserializeMessage(byte[] body) {
