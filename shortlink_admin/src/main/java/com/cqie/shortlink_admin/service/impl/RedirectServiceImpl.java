@@ -45,12 +45,6 @@ public class RedirectServiceImpl implements RedirectService {
     private final RocketMQTemplate rocketMQTemplate;
 
 
-    // 并发统计
-    private final AtomicLong totalRequestCount = new AtomicLong(0);
-    private final AtomicLong cacheHitCount = new AtomicLong(0);
-    private final AtomicLong bloomFilterMissCount = new AtomicLong(0);
-    private final AtomicLong dbQueryCount = new AtomicLong(0);
-    private final AtomicLong lockWaitCount = new AtomicLong(0);
 
 
     /**
@@ -59,25 +53,22 @@ public class RedirectServiceImpl implements RedirectService {
      */
     @Override
     public void redirect(String shortUrl, HttpServletRequest request, HttpServletResponse response) {
-        long requestNum = totalRequestCount.incrementAndGet();
 
         // 从缓存中获取短链对应的长链
         if (checkShortLinkCache(shortUrl, request, response)) {
-            log.debug("[请求:{}] 缓存命中: {}", requestNum, shortUrl);
+            log.debug("缓存命中: {}", shortUrl);
             return;
         }
 
         // 查询布隆过滤器
         if (!shortLinkCreateCachePenetrationBloomFilter.contains(shortUrl)) {
-            bloomFilterMissCount.incrementAndGet();
-            log.warn("[请求:{}] 布隆过滤器拦截: {}", requestNum, shortUrl);
+            log.warn("布隆过滤器拦截: {}", shortUrl);
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
         // 获取分布式锁
         RLock lock = redissonClient.getLock(LOCK_SHORT_LINK_REBUILD + shortUrl);
-        lockWaitCount.incrementAndGet();
         lock.lock();
         try {
             // double-check
@@ -92,10 +83,8 @@ public class RedirectServiceImpl implements RedirectService {
                             .eq(ShortLinkDO::getEnableStatus, 1)
                             .gt(ShortLinkDO::getValidDate, LocalDateTime.now())
             );
-            dbQueryCount.incrementAndGet();
-
             if (shortLink == null) {
-                log.warn("[请求:{}] 短链不存在: {}", requestNum, shortUrl);
+                log.warn("短链不存在: {}", shortUrl);
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 redisTemplate.opsForValue().set(CACHE_SHORT_LINK + shortUrl, "", 5 * 60 * 1000);
                 return;
@@ -111,7 +100,7 @@ public class RedirectServiceImpl implements RedirectService {
             response.setHeader("Location", shortLink.getOriginUrl());
 
 
-            log.info("[请求:{}] 重定向成功: {} -> {}", requestNum, shortUrl, shortLink.getOriginUrl());
+            log.info("重定向成功: {} -> {}", shortUrl, shortLink.getOriginUrl());
         } finally {
             lock.unlock();
         }
@@ -126,7 +115,6 @@ public class RedirectServiceImpl implements RedirectService {
     private boolean checkShortLinkCache(String shortUrl, HttpServletRequest request, HttpServletResponse response) {
         String originUrl = redisTemplate.opsForValue().get(CACHE_SHORT_LINK + shortUrl);
         if (StringUtils.isNotBlank(originUrl)) {
-            cacheHitCount.incrementAndGet();
             //统计
             statsLinkAccess(shortUrl, request, response);
             response.setStatus(HttpServletResponse.SC_FOUND);
