@@ -12,7 +12,6 @@ public class IdempotentUtil {
 
     private final RedisTemplate<String, String> redisTemplate;
 
-
     /**
      * 检查消息消费是否消费过
      * @param businessKey 业务键
