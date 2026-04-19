@@ -45,7 +45,7 @@ public class LinkDO extends BaseDO {
     /**
      * 点击量
      */
-    private Integer clickNum;
+    private Long clickNum;
 
     /**
      * 分组标识
