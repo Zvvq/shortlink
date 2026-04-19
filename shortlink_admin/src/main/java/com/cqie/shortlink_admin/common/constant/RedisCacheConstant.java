@@ -11,4 +11,7 @@ public class RedisCacheConstant {
     // 短链缓存重建锁
     public final static String LOCK_SHORT_LINK_REBUILD = "short-link:lock:short-link:rebuild:";
 
+    //定时任务锁
+    public final static String LOCK_SCHEDULE_TASK = "short-link:lock:schedule:task";
+
 }
