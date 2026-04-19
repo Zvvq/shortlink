@@ -7,6 +7,8 @@ import com.cqie.shortlink_admin.mapper.LinkAccessStatsMapper;
 import com.cqie.shortlink_admin.service.ScheduledService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,6 +24,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static com.cqie.shortlink_admin.common.constant.RedisCacheConstant.LOCK_SCHEDULE_TASK;
 
 
 @Component
@@ -33,6 +38,7 @@ public class RedisStatsToDbTask implements SchedulingConfigurer {
     private final RedisTemplate<String, String> redisTemplate;
     private final ScheduledService scheduledService;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
+    private final RedissonClient redissonClient;
 
 
     @Override
@@ -57,14 +63,28 @@ public class RedisStatsToDbTask implements SchedulingConfigurer {
     private void syncRedisStatsToDatabase() {
         System.out.println("【定时任务】开始同步 Redis UV/PV 数据到数据库 =====");
 
-        //获取当天的数据
-        LocalDateTime now = LocalDateTime.now();
-        processAllKeysForDate(now);
-        // 获取昨天的数据，防止跨天数据遗漏
-        processAllKeysForDate(now.minusDays(1));
+        RLock lock = redissonClient.getLock(LOCK_SCHEDULE_TASK);
 
-        log.info("【定时任务】完成同步 Redis UV/PV 数据到数据库 =====");
+        try {
+            if (lock.tryLock(0, 60, TimeUnit.SECONDS)) {
+                log.info("获取分布式锁成功，开始执行任务");
+            } else {
+                log.warn("获取分布式锁失败，可能有其他实例正在执行任务，跳过本次执行");
+                return;
+            }
 
+            //获取当天的数据
+            LocalDateTime now = LocalDateTime.now();
+            processAllKeysForDate(now);
+            // 获取昨天的数据，防止跨天数据遗漏
+            processAllKeysForDate(now.minusDays(1));
+
+            log.info("【定时任务】完成同步 Redis UV/PV 数据到数据库 =====");
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            lock.unlock();
+        }
     }
 
 
