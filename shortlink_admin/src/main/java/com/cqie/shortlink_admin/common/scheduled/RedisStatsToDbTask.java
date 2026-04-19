@@ -4,10 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.cqie.shortlink_admin.entity.LinkAccessStatsDO;
 import com.cqie.shortlink_admin.entity.ScheduledDO;
 import com.cqie.shortlink_admin.mapper.LinkAccessStatsMapper;
-import com.cqie.shortlink_admin.service.LinkAccessStatsService;
 import com.cqie.shortlink_admin.service.ScheduledService;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.Pipeline;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -23,12 +22,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 
 @Component
 @EnableScheduling
 @RequiredArgsConstructor
+@Slf4j
 public class RedisStatsToDbTask implements SchedulingConfigurer {
 
     private final RedisTemplate<String, String> redisTemplate;
@@ -64,7 +63,8 @@ public class RedisStatsToDbTask implements SchedulingConfigurer {
         // 获取昨天的数据，防止跨天数据遗漏
         processAllKeysForDate(now.minusDays(1));
 
-         System.out.println("【定时任务】完成同步 Redis UV/PV 数据到数据库 =====");
+        log.info("【定时任务】完成同步 Redis UV/PV 数据到数据库 =====");
+
     }
 
 
