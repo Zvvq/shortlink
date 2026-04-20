@@ -28,6 +28,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.cqie.shortlink_admin.common.constant.RedisCacheConstant.CACHE_SHORT_LINK;
@@ -86,12 +87,12 @@ public class RedirectServiceImpl implements RedirectService {
             if (shortLink == null) {
                 log.warn("短链不存在: {}", shortUrl);
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                redisTemplate.opsForValue().set(CACHE_SHORT_LINK + shortUrl, "", 5 * 60 * 1000);
+                redisTemplate.opsForValue().set(CACHE_SHORT_LINK + shortUrl, "", 60, TimeUnit.SECONDS);//设置空值缓存，防止缓存穿透
                 return;
             }
 
             // 重建缓存并重定向
-            redisTemplate.opsForValue().set(CACHE_SHORT_LINK + shortUrl, shortLink.getOriginUrl(), 7 * 24 * 60 * 60 * 1000);//设置过期时间为七天
+            redisTemplate.opsForValue().set(CACHE_SHORT_LINK + shortUrl, shortLink.getOriginUrl(), 7 * 24 * 60 * 60, TimeUnit.SECONDS);//设置过期时间为七天
 
             // 统计访问量，涉及到cookie操作，放在锁内，避免并发导致的统计数据不准确问题
             //cookie操作放在重定向之前
