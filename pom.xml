@@ -19,6 +19,7 @@
 
     <modules>
         <module>shortlink_admin</module>
+        <module>shortlink_project</module>
     </modules>
 
     <licenses>
