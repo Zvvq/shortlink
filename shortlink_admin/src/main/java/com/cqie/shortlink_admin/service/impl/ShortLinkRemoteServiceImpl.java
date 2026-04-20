@@ -78,9 +78,38 @@ public class ShortLinkRemoteServiceImpl implements ShortLinkRemoteService {
         paramMap.put("describe", requestDTO.getDescribe());
 
         // 发送PUT请求
-        HttpResponse execute = HttpRequest.put(url)
+        log.info("更新短链接请求URL: {}, 参数: {}", url, JSONUtil.toJsonStr(paramMap));
+        HttpResponse response = HttpRequest.put(url)
+                .header("Content-Type", "application/json")
                 .body(JSONUtil.toJsonStr(paramMap))
+                .timeout(5000)
                 .execute();
+        
+        log.info("更新短链接响应状态码: {}", response.getStatus());
+        String result = response.body();
+        log.info("更新短链接响应结果: {}", result);
+        
+        // 检查响应
+        if (response.getStatus() != 200) {
+            log.error("更新短链接失败，HTTP状态码: {}, 响应: {}", response.getStatus(), result);
+            throw new RuntimeException("更新短链接失败，HTTP状态码: " + response.getStatus());
+        }
+        
+        // 解析响应，检查业务是否成功
+        if (result != null && !result.trim().isEmpty()) {
+            try {
+                JSONObject jsonObject = JSONUtil.parseObj(result);
+                String code = jsonObject.getStr("code");
+                // 成功码为 "0000"
+                if (!"0000".equals(code)) {
+                    String message = jsonObject.getStr("message");
+                    log.error("更新短链接业务失败，code: {}, message: {}", code, message);
+                    throw new RuntimeException("更新短链接失败: " + message);
+                }
+            } catch (Exception e) {
+                log.warn("解析响应JSON失败，但HTTP状态码为200，认为更新成功: {}", e.getMessage());
+            }
+        }
     }
 
     /**
