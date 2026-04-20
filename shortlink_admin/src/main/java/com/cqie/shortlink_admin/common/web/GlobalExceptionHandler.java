@@ -14,6 +14,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Objects;
@@ -56,6 +57,7 @@ public class GlobalExceptionHandler {
      * 拦截未捕获异常
      */
     @ExceptionHandler(value = Throwable.class)
+    @RequestMapping(produces = "application/json;charset=UTF-8")
     public Result defaultErrorHandler(HttpServletRequest request, Throwable throwable) {
         log.error("[{}] {} ", request.getMethod(), getUrl(request), throwable);
         // 注意，此处是为了聚合模式添加的代码，正常不需要该判断
