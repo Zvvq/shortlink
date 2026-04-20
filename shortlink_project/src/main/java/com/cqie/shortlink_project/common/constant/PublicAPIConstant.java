@@ -14,7 +14,8 @@ public class PublicAPIConstant {
             "/{shortUrl}", // 短链接跳转接口
             "/v3/api-docs/**",     // Swagger API文档
             "/swagger-ui/**",
-            "/swagger-ui.html"
+            "/swagger-ui.html",
+            "/api/**"
     );
 
     // Spring 路径匹配器（单例，线程安全）
