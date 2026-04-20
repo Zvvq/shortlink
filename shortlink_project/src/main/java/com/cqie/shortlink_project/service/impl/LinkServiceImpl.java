@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cqie.shortlink_project.common.constant.RocketMQConstant;
 import com.cqie.shortlink_project.common.convention.exception.ClientException;
 import com.cqie.shortlink_project.dto.request.ShortLinkCreateRequest;
 import com.cqie.shortlink_project.dto.request.ShortLinkPageRequest;
@@ -12,6 +13,7 @@ import com.cqie.shortlink_project.dto.request.ShortLinkUpdateRequest;
 import com.cqie.shortlink_project.dto.response.GroupLinkCountResponse;
 import com.cqie.shortlink_project.dto.response.ShortLinkCreateResponse;
 import com.cqie.shortlink_project.dto.response.ShortLinkPageResponse;
+import com.cqie.shortlink_project.entity.CacheEvictMessage;
 import com.cqie.shortlink_project.entity.GroupDO;
 import com.cqie.shortlink_project.entity.LinkDO;
 import com.cqie.shortlink_project.mapper.GroupMapper;
@@ -20,6 +22,10 @@ import com.cqie.shortlink_project.service.LinkService;
 import com.cqie.shortlink_project.util.BeanUtil;
 import com.cqie.shortlink_project.util.ShortLinkUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.client.producer.SendCallback;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,10 +41,12 @@ import static com.cqie.shortlink_project.common.convention.errorcode.BaseErrorCo
 */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
     implements LinkService {
 
     private final GroupMapper groupMapper;
+    private final RocketMQTemplate rocketMQTemplate;
 
 
     /**
@@ -56,7 +64,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         LinkDO linkDO = BeanUtil.convert(requestParam, LinkDO.class);
         linkDO.setShortUri(shortLink);
         linkDO.setFullShortUrl(requestParam.getDomain()+ "/" + shortLink);
-        linkDO.setClickNum(0);
+        linkDO.setClickNum(0L);
         linkDO.setEnableStatus(1);
 
         //保存短链接信息到数据库
@@ -95,10 +103,32 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         linkDO.setDescribe(requestParam.getDescribe());
 
         int update = baseMapper.updateById(linkDO);
-
         if (update < 1) {
             throw new ClientException(SHORT_LINK_UPDATE_ERROR);
         }
+
+        // 构建缓存清除消息
+        CacheEvictMessage message = CacheEvictMessage
+                .builder()
+                .shortUrl(linkDO.getFullShortUrl())
+                .build();
+
+        // 发送缓存清除消息
+        rocketMQTemplate.asyncSend(RocketMQConstant.SHORT_LINK_CACHE_EVICT_TOPIC, message,
+                new SendCallback() {
+                    @Override
+                    public void onSuccess(SendResult sendResult) {
+                        // 处理发送成功
+                        log.info("发送短链缓存清除消息成功: {}", sendResult);
+                    }
+
+                    @Override
+                    public void onException(Throwable e) {
+                        // 处理发送异常
+                        log.error("发送短链缓存清除消息失败: {}", e);
+                    }
+                });
+
     }
 
     /**
