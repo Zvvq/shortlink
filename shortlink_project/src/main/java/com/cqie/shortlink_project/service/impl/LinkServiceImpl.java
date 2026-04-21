@@ -13,6 +13,7 @@ import com.cqie.shortlink_project.common.convention.exception.ClientException;
 import com.cqie.shortlink_project.dto.request.ShortLinkCreateRequest;
 import com.cqie.shortlink_project.dto.request.ShortLinkPageRequest;
 import com.cqie.shortlink_project.dto.request.ShortLinkUpdateRequest;
+import com.cqie.shortlink_project.dto.response.GenerateDescriptionResponse;
 import com.cqie.shortlink_project.dto.response.GroupLinkCountResponse;
 import com.cqie.shortlink_project.dto.response.ShortLinkCreateResponse;
 import com.cqie.shortlink_project.dto.response.ShortLinkPageResponse;
@@ -30,6 +31,8 @@ import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -264,20 +267,27 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
     }
 
     @Override
-    public String generateDescription(String originalUrl) {
+    public GenerateDescriptionResponse generateDescription(String originalUrl) {
         String baseUrl = summaryWebConfiguration.getBaseUrl();
+
+        Map<String, String> body = new HashMap<>();
+        body.put("url", originalUrl);
+
         String responseBody = HttpRequest.post(baseUrl)
-                .form("url", originalUrl)          // 表单参数
+                .header("Content-Type", "application/json")
+                .body(JSONObject.toJSONString(body))
                 .execute()
                 .body();
 
 
         // 解析响应
         JSONObject response = JSONObject.parseObject(responseBody);
-        if (!response.getJSONObject("code").equals("200") || response.getJSONObject("data") == null) {
+        if (!response.getString("code").equals("200") || response.getJSONObject("data") == null) {
             throw new ClientException(SUMMARY_GENERATION_ERROR);
         }
-        return response.getJSONObject("data").getString("summary");
+        log.info("generateDescription response: {}", response);
+        return response.getJSONObject("data")
+                .to(GenerateDescriptionResponse.class);
     }
 
 }

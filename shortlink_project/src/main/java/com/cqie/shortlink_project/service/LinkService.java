@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.cqie.shortlink_project.dto.request.ShortLinkCreateRequest;
 import com.cqie.shortlink_project.dto.request.ShortLinkPageRequest;
 import com.cqie.shortlink_project.dto.request.ShortLinkUpdateRequest;
+import com.cqie.shortlink_project.dto.response.GenerateDescriptionResponse;
 import com.cqie.shortlink_project.dto.response.GroupLinkCountResponse;
 import com.cqie.shortlink_project.dto.response.ShortLinkCreateResponse;
 import com.cqie.shortlink_project.dto.response.ShortLinkPageResponse;
@@ -59,5 +60,5 @@ public interface LinkService extends IService<LinkDO> {
      * @param originalUrl 原始链接
      * @return 描述信息
      */
-    String generateDescription(String originalUrl);
+    GenerateDescriptionResponse generateDescription(String originalUrl);
 }
