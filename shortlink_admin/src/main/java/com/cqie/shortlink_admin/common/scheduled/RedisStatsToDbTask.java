@@ -50,7 +50,7 @@ public class RedisStatsToDbTask implements SchedulingConfigurer {
                 triggerContext -> {
                     ScheduledDO scheduledDO = scheduledService.getOne(
                             new LambdaQueryWrapper<ScheduledDO>()
-                                    .eq(ScheduledDO::getCronId, 1)
+                                    .eq(ScheduledDO::getCronId, 2)
                     );
                     return new CronTrigger(scheduledDO.getCron()).nextExecutionTime(triggerContext).toInstant();
                 }
