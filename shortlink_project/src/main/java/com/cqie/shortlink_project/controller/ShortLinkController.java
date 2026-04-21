@@ -5,12 +5,14 @@ import com.cqie.shortlink_project.common.convention.result.Result;
 import com.cqie.shortlink_project.dto.request.ShortLinkCreateRequest;
 import com.cqie.shortlink_project.dto.request.ShortLinkPageRequest;
 import com.cqie.shortlink_project.dto.request.ShortLinkUpdateRequest;
+import com.cqie.shortlink_project.dto.response.GenerateDescriptionResponse;
 import com.cqie.shortlink_project.dto.response.GroupLinkCountResponse;
 import com.cqie.shortlink_project.dto.response.ShortLinkCreateResponse;
 import com.cqie.shortlink_project.dto.response.ShortLinkPageResponse;
 import com.cqie.shortlink_project.service.LinkService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/shortlink/v1/link")
 @RequiredArgsConstructor
+@Slf4j
 public class ShortLinkController {
 
     private final LinkService linkService;
@@ -81,7 +84,8 @@ public class ShortLinkController {
      * 根据原始链接总结网页内容
      */
     @GetMapping("/description")
-    public Result<String> generateDescription(@RequestParam String originalUrl) {
+    public Result<GenerateDescriptionResponse> generateDescription(@RequestParam String originalUrl) {
+        log.info("generateDescription originalUrl: {}", originalUrl);
         return Result.success(linkService.generateDescription(originalUrl));
     }
 }
