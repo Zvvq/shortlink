@@ -76,4 +76,12 @@ public class ShortLinkController {
     public Result<List<GroupLinkCountResponse>> listGroupLinkCount(@RequestParam String username) {
         return Result.success(linkService.listGroupLinkCount(username));
     }
+
+    /**
+     * 根据原始链接总结网页内容
+     */
+    @GetMapping("/description")
+    public Result<String> generateDescription(@RequestParam String originalUrl) {
+        return Result.success(linkService.generateDescription(originalUrl));
+    }
 }
