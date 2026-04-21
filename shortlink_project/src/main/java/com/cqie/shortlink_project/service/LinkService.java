@@ -52,4 +52,12 @@ public interface LinkService extends IService<LinkDO> {
      * @return 分组及短链接数量列表
      */
     List<GroupLinkCountResponse> listGroupLinkCount(String username);
+
+
+    /**
+     * 根据原始链接生成描述
+     * @param originalUrl 原始链接
+     * @return 描述信息
+     */
+    String generateDescription(String originalUrl);
 }
