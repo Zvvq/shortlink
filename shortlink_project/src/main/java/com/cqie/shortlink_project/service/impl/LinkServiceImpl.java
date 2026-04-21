@@ -1,10 +1,13 @@
 package com.cqie.shortlink_project.service.impl;
 
 
+import cn.hutool.http.HttpRequest;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cqie.shortlink_project.common.config.SummaryWebConfiguration;
 import com.cqie.shortlink_project.common.constant.RocketMQConstant;
 import com.cqie.shortlink_project.common.convention.exception.ClientException;
 import com.cqie.shortlink_project.dto.request.ShortLinkCreateRequest;
@@ -27,7 +30,6 @@ import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,6 +49,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
 
     private final GroupMapper groupMapper;
     private final RocketMQTemplate rocketMQTemplate;
+    private final SummaryWebConfiguration summaryWebConfiguration;
 
 
     /**
@@ -259,4 +262,22 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
             return response;
         }).collect(Collectors.toList());
     }
+
+    @Override
+    public String generateDescription(String originalUrl) {
+        String baseUrl = summaryWebConfiguration.getBaseUrl();
+        String responseBody = HttpRequest.post(baseUrl)
+                .form("url", originalUrl)          // 表单参数
+                .execute()
+                .body();
+
+
+        // 解析响应
+        JSONObject response = JSONObject.parseObject(responseBody);
+        if (!response.getJSONObject("code").equals("200") || response.getJSONObject("data") == null) {
+            throw new ClientException(SUMMARY_GENERATION_ERROR);
+        }
+        return response.getJSONObject("data").getString("summary");
+    }
+
 }
