@@ -32,6 +32,7 @@ public enum BaseErrorCode implements IErrorCode {
     SHORT_LINK_UPDATE_ERROR("A000301", "短链接更新失败"),
     SHORT_LINK_DELETE_ERROR("A000302", "短链接删除失败"),
     SHORT_LINK_QUERY_ERROR("A000303", "短链接查询失败"),
+    SUMMARY_GENERATION_ERROR("A000304", "短链接摘要生成失败"),
 
     // ========== 二级宏观错误码 系统请求缺少幂等Token ==========
     IDEMPOTENT_TOKEN_NULL_ERROR("A000200", "幂等Token为空"),
