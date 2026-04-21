@@ -148,6 +148,12 @@
             <version>2.3.4</version> <!-- 请使用最新版本 -->
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.14</version>
+        </dependency>
+
 
     </dependencies>
 
