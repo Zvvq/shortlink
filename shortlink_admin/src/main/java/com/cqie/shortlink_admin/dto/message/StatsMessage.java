@@ -1,8 +1,6 @@
 package com.cqie.shortlink_admin.dto.message;
 
 import lombok.*;
-import org.apache.rocketmq.common.message.Message;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 

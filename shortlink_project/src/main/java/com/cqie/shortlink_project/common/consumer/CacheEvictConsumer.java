@@ -1,8 +1,8 @@
 package com.cqie.shortlink_project.common.consumer;
 
 
-import com.cqie.shortlink_project.common.constant.RedisCacheConstant;
-import com.cqie.shortlink_project.common.constant.RocketMQConstant;
+import com.cqie.shortlink_common.common.constant.RedisCacheConstant;
+import com.cqie.shortlink_common.common.constant.RocketMQConstant;
 import com.cqie.shortlink_project.entity.CacheEvictMessage;
 import com.cqie.shortlink_project.util.IdempotentUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;

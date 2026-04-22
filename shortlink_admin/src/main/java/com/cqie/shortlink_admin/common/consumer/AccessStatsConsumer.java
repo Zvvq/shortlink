@@ -1,7 +1,7 @@
 package com.cqie.shortlink_admin.common.consumer;
 
 
-import com.cqie.shortlink_admin.common.constant.RocketMQConstant;
+import com.cqie.shortlink_common.common.constant.RocketMQConstant;
 import com.cqie.shortlink_admin.dto.message.StatsMessage;
 import com.cqie.shortlink_admin.util.IdempotentUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;

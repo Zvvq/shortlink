@@ -3,11 +3,10 @@ package com.cqie.shortlink_admin.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.cqie.shortlink_admin.common.convention.database.BaseDO;
+import com.cqie.shortlink_common.common.convention.database.BaseDO;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * 短链访问统计 DO

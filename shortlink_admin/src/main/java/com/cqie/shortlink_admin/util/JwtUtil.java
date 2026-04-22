@@ -1,14 +1,12 @@
 package com.cqie.shortlink_admin.util;
 
-import com.cqie.shortlink_admin.common.constant.JwtConstant;
+import com.cqie.shortlink_common.common.constant.JwtConstant;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 

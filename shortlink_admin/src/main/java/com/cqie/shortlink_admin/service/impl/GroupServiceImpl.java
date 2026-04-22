@@ -1,9 +1,8 @@
 package com.cqie.shortlink_admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cqie.shortlink_admin.common.convention.exception.ClientException;
+import com.cqie.shortlink_common.common.convention.exception.ClientException;
 import com.cqie.shortlink_admin.dto.request.SortGroupRequestDTO;
 import com.cqie.shortlink_admin.dto.request.UpdateGroupRequestDTO;
 import com.cqie.shortlink_admin.dto.response.SaveGroupResponseDTO;
@@ -19,8 +18,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.cqie.shortlink_admin.common.constant.GroupConstant.MAX_GROUP_COUNT;
-import static com.cqie.shortlink_admin.common.convention.errorcode.BaseErrorCode.*;
+import static com.cqie.shortlink_common.common.constant.GroupConstant.MAX_GROUP_COUNT;
+import static com.cqie.shortlink_common.common.convention.errorcode.BaseErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
