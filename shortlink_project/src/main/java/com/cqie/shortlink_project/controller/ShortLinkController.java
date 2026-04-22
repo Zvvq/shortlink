@@ -1,7 +1,7 @@
 package com.cqie.shortlink_project.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.cqie.shortlink_project.common.convention.result.Result;
+import com.cqie.shortlink_common.common.convention.result.Result;
 import com.cqie.shortlink_project.dto.request.ShortLinkCreateRequest;
 import com.cqie.shortlink_project.dto.request.ShortLinkPageRequest;
 import com.cqie.shortlink_project.dto.request.ShortLinkUpdateRequest;

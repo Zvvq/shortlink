@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.util.Date;
 
-import com.cqie.shortlink_admin.common.convention.database.BaseDO;
+import com.cqie.shortlink_common.common.convention.database.BaseDO;
 import lombok.Data;
 
 /**

@@ -1,6 +1,6 @@
 package com.cqie.shortlink_admin.controller;
 
-import com.cqie.shortlink_admin.common.convention.result.Result;
+import com.cqie.shortlink_common.common.convention.result.Result;
 import com.cqie.shortlink_admin.dto.request.ShortLinkCreateRequestDTO;
 import com.cqie.shortlink_admin.dto.request.ShortLinkPageRequestDTO;
 import com.cqie.shortlink_admin.dto.request.ShortLinkUpdateRequestDTO;

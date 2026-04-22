@@ -1,7 +1,7 @@
 package com.cqie.shortlink_admin.controller;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.cqie.shortlink_admin.common.convention.result.Result;
+import com.cqie.shortlink_common.common.convention.result.Result;
 import com.cqie.shortlink_admin.dto.request.UserLoginRequestDTO;
 import com.cqie.shortlink_admin.dto.request.UserRegisterDTO;
 import com.cqie.shortlink_admin.dto.response.UserActualResponseDTO;
@@ -11,6 +11,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 用户管理控制层
+ */
 @RestController
 @RequestMapping("/api/shortlink/v1/user")
 @AllArgsConstructor

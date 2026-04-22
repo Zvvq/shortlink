@@ -2,8 +2,9 @@ package com.cqie.shortlink_admin.common.config;
 
 
 
-import com.cqie.shortlink_admin.common.constant.PublicAPIConstant;
+import com.cqie.shortlink_common.common.constant.PublicAPIConstant;
 import com.cqie.shortlink_admin.common.filter.JwtAuthenticationFilter;
+import com.cqie.shortlink_common.common.convention.result.Result;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -20,8 +21,6 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import com.cqie.shortlink_admin.common.convention.result.Result;
-
 @Configuration
 @EnableMethodSecurity
 public class SpringSecurityConfig {

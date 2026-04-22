@@ -2,7 +2,7 @@ package com.cqie.shortlink_admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cqie.shortlink_admin.common.convention.exception.ClientException;
+import com.cqie.shortlink_common.common.convention.exception.ClientException;
 import com.cqie.shortlink_admin.dto.request.UserLoginRequestDTO;
 import com.cqie.shortlink_admin.dto.request.UserRegisterDTO;
 import com.cqie.shortlink_admin.dto.response.UserResponseDTO;
@@ -27,8 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
-import static com.cqie.shortlink_admin.common.constant.RedisCacheConstant.LOCK_USER_REGISTER;
-import static com.cqie.shortlink_admin.common.convention.errorcode.BaseErrorCode.*;
+import static com.cqie.shortlink_common.common.constant.RedisCacheConstant.LOCK_USER_REGISTER;
+import static com.cqie.shortlink_common.common.convention.errorcode.BaseErrorCode.*;
 
 /**
 * @author friendA

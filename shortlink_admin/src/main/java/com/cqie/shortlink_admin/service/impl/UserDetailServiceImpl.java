@@ -1,6 +1,6 @@
 package com.cqie.shortlink_admin.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.cqie.shortlink_admin.common.convention.exception.ClientException;
+import com.cqie.shortlink_common.common.convention.exception.ClientException;
 import com.cqie.shortlink_admin.entity.UserDO;
 import com.cqie.shortlink_admin.mapper.TUserMapper;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +12,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import static com.cqie.shortlink_admin.common.convention.errorcode.BaseErrorCode.USERNAME_NULL_ERROR;
+import static com.cqie.shortlink_common.common.convention.errorcode.BaseErrorCode.USERNAME_NULL_ERROR;
 
 
 @Service
