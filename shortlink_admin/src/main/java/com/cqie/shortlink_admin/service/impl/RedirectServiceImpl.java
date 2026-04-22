@@ -85,7 +85,7 @@ public class RedirectServiceImpl implements RedirectService {
             }
 
             // 重建缓存并重定向
-            redisTemplate.opsForValue().set(CACHE_SHORT_LINK + shortUrl, shortLink.getOriginUrl(), 7 * 24 * 60 * 60, TimeUnit.SECONDS);//设置过期时间为七天
+            redisTemplate.opsForValue().set(CACHE_SHORT_LINK + shortUrl, shortLink.getOriginUrl(), 15, TimeUnit.MINUTES);//设置过期时间为15分钟
 
             // 统计访问量，涉及到cookie操作，放在锁内，避免并发导致的统计数据不准确问题
             //cookie操作放在重定向之前
