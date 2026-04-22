@@ -1,7 +1,7 @@
 package com.cqie.shortlink_admin.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.cqie.shortlink_admin.common.constant.RocketMQConstant;
+import com.cqie.shortlink_common.common.constant.RocketMQConstant;
 import com.cqie.shortlink_admin.dto.message.StatsMessage;
 import com.cqie.shortlink_admin.entity.ShortLinkDO;
 import com.cqie.shortlink_admin.mapper.ShortLinkMapper;
@@ -24,8 +24,8 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static com.cqie.shortlink_admin.common.constant.RedisCacheConstant.CACHE_SHORT_LINK;
-import static com.cqie.shortlink_admin.common.constant.RedisCacheConstant.LOCK_SHORT_LINK_REBUILD;
+import static com.cqie.shortlink_common.common.constant.RedisCacheConstant.CACHE_SHORT_LINK;
+import static com.cqie.shortlink_common.common.constant.RedisCacheConstant.LOCK_SHORT_LINK_REBUILD;
 
 @Slf4j
 @Service
