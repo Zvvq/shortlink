@@ -29,12 +29,6 @@ public class CacheEvictConsumer implements RocketMQListener<MessageExt> {
         // 处理接收到的消息，例如记录访问统计数据
         String msgId = messageExt.getMsgId();
 
-        boolean idempotent = idempotentUtil.checkIdempotent(RocketMQConstant.SHORT_LINK_STATES_CHECK_IDEMPOTENT, msgId);
-        if (idempotent) {
-            log.info("消息 {} 已经被消费过了，忽略重复消费", msgId);
-            return;
-        }
-
         CacheEvictMessage cacheEvictMessage = deserializeMessage(messageExt.getBody());
         if (cacheEvictMessage == null || cacheEvictMessage.getShortUrl() == null) {
             log.error("消息反序列化失败或shortUrl为空: msgId={}", msgId);
