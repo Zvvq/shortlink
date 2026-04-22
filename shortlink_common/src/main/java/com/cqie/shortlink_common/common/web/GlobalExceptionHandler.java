@@ -1,11 +1,11 @@
-package com.cqie.shortlink_admin.common.web;
+package com.cqie.shortlink_common.common.web;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.cqie.shortlink_admin.common.convention.errorcode.BaseErrorCode;
-import com.cqie.shortlink_admin.common.convention.exception.AbstractException;
-import com.cqie.shortlink_admin.common.convention.result.Result;
+import com.cqie.shortlink_common.common.convention.errorcode.BaseErrorCode;
+import com.cqie.shortlink_common.common.convention.exception.AbstractException;
+import com.cqie.shortlink_common.common.convention.result.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

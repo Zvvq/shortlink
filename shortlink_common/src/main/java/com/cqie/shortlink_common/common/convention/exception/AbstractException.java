@@ -1,6 +1,6 @@
-package com.cqie.shortlink_project.common.convention.exception;
+package com.cqie.shortlink_common.common.convention.exception;
 
-import com.cqie.shortlink_project.common.convention.errorcode.IErrorCode;
+import com.cqie.shortlink_common.common.convention.errorcode.IErrorCode;
 import lombok.Getter;
 import org.springframework.util.StringUtils;
 

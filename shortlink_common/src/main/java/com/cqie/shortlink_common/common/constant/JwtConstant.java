@@ -1,4 +1,4 @@
-package com.cqie.shortlink_admin.common.constant;
+package com.cqie.shortlink_common.common.constant;
 
 public class JwtConstant {
     public static final String SECRET = "8f3hG@9kL#2mN$5pQ^7rT&1vW*yXzB4cD6eF";

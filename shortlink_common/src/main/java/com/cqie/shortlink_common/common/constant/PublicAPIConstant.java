@@ -1,4 +1,4 @@
-package com.cqie.shortlink_project.common.constant;
+package com.cqie.shortlink_common.common.constant;
 
 import org.springframework.util.AntPathMatcher;
 
@@ -12,10 +12,10 @@ public class PublicAPIConstant {
             "/api/shortlink/v1/user/register", // 注册接口
             "/api/shortlink/v1/user/exists/{username}", // 用户相关接口（如检查用户名是否存在）
             "/{shortUrl}", // 短链接跳转接口
+            "/api/shortlink/v1/link/**", // project模块的短链接管理接口（内部服务调用，无需认证）
             "/v3/api-docs/**",     // Swagger API文档
             "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/api/**"
+            "/swagger-ui.html"
     );
 
     // Spring 路径匹配器（单例，线程安全）

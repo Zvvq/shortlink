@@ -1,8 +1,7 @@
-package com.cqie.shortlink_project.common.convention.exception;
+package com.cqie.shortlink_common.common.convention.exception;
 
-
-import com.cqie.shortlink_project.common.convention.errorcode.BaseErrorCode;
-import com.cqie.shortlink_project.common.convention.errorcode.IErrorCode;
+import com.cqie.shortlink_common.common.convention.errorcode.BaseErrorCode;
+import com.cqie.shortlink_common.common.convention.errorcode.IErrorCode;
 
 /**
  * 客户端异常

@@ -1,4 +1,4 @@
-package com.cqie.shortlink_admin.common.convention.database;
+package com.cqie.shortlink_common.common.convention.database;
 
 import lombok.Data;
 

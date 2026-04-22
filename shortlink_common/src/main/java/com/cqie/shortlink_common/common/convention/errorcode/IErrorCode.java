@@ -1,4 +1,4 @@
-package com.cqie.shortlink_project.common.convention.errorcode;
+package com.cqie.shortlink_common.common.convention.errorcode;
 
 public interface IErrorCode {
 
