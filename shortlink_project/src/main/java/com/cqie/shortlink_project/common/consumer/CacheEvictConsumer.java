@@ -61,7 +61,7 @@ public class CacheEvictConsumer implements RocketMQListener<MessageExt> {
         try {
             return objectMapper.readValue(body, CacheEvictMessage.class);
         } catch (Exception e) {
-            log.error("反序列化 StatsMessage 失败", e);
+            log.error("反序列化 CacheEvictMessage 失败", e);
             return null;
         }
     }
