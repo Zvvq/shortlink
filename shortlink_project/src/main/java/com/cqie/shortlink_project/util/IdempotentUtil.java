@@ -21,7 +21,7 @@ public class IdempotentUtil {
     public boolean checkIdempotent(String businessKey, String msgId) {
         // 原子 SETNX + 过期时间
         return !Boolean.TRUE.equals(
-                redisTemplate.opsForValue().setIfAbsent(businessKey + ":" + msgId, "1", 24, TimeUnit.HOURS)
+                redisTemplate.opsForValue().setIfAbsent(businessKey + ":" + msgId, "1", 3, TimeUnit.HOURS)
         );
     }
 }
