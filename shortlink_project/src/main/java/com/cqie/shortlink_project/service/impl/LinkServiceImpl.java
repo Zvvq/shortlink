@@ -50,6 +50,11 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
     private final RocketMQTemplate rocketMQTemplate;
     private final SummaryWebConfiguration summaryWebConfiguration;
 
+    /**
+     * 创建短链
+     * @param requestParam 创建短链请求参数
+     * @return 创建短链响应参数
+     */
     @Override
     public ShortLinkCreateResponse createShortLink(ShortLinkCreateRequest requestParam) {
         String shortLink = ShortLinkUtil.generateShortCode(requestParam.getOriginUrl());
@@ -70,6 +75,10 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         return shortLinkCreateResponse;
     }
 
+    /**
+     * 更新短链信息
+     * @param requestParam 更新短链请求参数
+     */
     @Override
     public void updateShortLink(ShortLinkUpdateRequest requestParam) {
         LinkDO linkDO = baseMapper.selectOne(
@@ -109,6 +118,10 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
                 });
     }
 
+    /**
+     * 根据完整短链接删除短链接
+     * @param fullShortUrl 完整短链接
+     */
     @Override
     public void deleteShortLink(String fullShortUrl) {
         LinkDO linkDO = baseMapper.selectOne(
@@ -127,6 +140,11 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         }
     }
 
+    /**
+     * 分页查询短链信息
+     * @param requestParam 分页查询请求参数
+     * @return 分页查询结果
+     */
     @Override
     public IPage<ShortLinkPageResponse> pageShortLink(ShortLinkPageRequest requestParam) {
         long current = requestParam.getCurrent() != null ? requestParam.getCurrent() : 1;
@@ -165,6 +183,11 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         return resultPage;
     }
 
+    /**
+     * 根据用户分组短链数量
+     * @param username 用户名
+     * @return 分组短链数量列表
+     */
     @Override
     public List<GroupLinkCountResponse> listGroupLinkCount(String username) {
         List<GroupDO> groupList = groupMapper.selectList(
@@ -205,6 +228,11 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         }).collect(Collectors.toList());
     }
 
+    /**
+     * 根据原始链接生成描述信息
+     * @param originalUrl 原始链接
+     * @return 描述信息
+     */
     @Override
     public GenerateDescriptionResponse generateDescription(String originalUrl) {
         String baseUrl = summaryWebConfiguration.getBaseUrl();
@@ -219,13 +247,26 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
                 .body();
 
         JSONObject response = JSONObject.parseObject(responseBody);
-        if (!"200".equals(response.getString("code")) || response.getJSONObject("data") == null) {
+        GenerateDescriptionResponse data = response.getJSONObject("data").to(GenerateDescriptionResponse.class);
+
+        if (!"200".equals(response.getString("code")) || data == null) {
             throw new ClientException(SUMMARY_GENERATION_ERROR);
         }
         log.info("generateDescription response: {}", response);
+
+        // 验证描述信息是否安全，如果不安全则抛出异常
+        if (!data.getIsSafe()) {
+            throw new ClientException(SUMMARY_GENERATION_ERROR);
+        }
+
         return response.getJSONObject("data").to(GenerateDescriptionResponse.class);
     }
 
+    /**
+     * 解析默认分组ID，如果用户没有指定分组ID，则将短链放在默认分组下
+     * @param username 用户名
+     * @return 默认分组ID
+     */
     private String resolveDefaultGroupId(String username) {
         GroupDO defaultGroup = groupMapper.selectOne(
                 new QueryWrapper<GroupDO>()
