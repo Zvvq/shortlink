@@ -78,8 +78,9 @@ public class RedirectServiceImpl implements RedirectService {
                             .gt(ShortLinkDO::getValidDate, LocalDateTime.now())
             );
             if (shortLink == null) {
-                log.warn("短链不存在: {}", shortUrl);
+                log.warn("布隆过滤器误判，短链不存在: {}", shortUrl);
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                //缓存空值，解决误判
                 redisTemplate.opsForValue().set(CACHE_SHORT_LINK + shortUrl, "", 60, TimeUnit.SECONDS);//设置空值缓存，防止缓存穿透
                 return;
             }
