@@ -14,6 +14,7 @@ import com.cqie.shortlink_project.dto.request.ShortLinkPageRequest;
 import com.cqie.shortlink_project.dto.request.ShortLinkUpdateRequest;
 import com.cqie.shortlink_project.dto.response.GenerateDescriptionResponse;
 import com.cqie.shortlink_project.dto.response.GroupLinkCountResponse;
+import com.cqie.shortlink_project.dto.response.LinkClickStatsResponse;
 import com.cqie.shortlink_project.dto.response.ShortLinkCreateResponse;
 import com.cqie.shortlink_project.dto.response.ShortLinkPageResponse;
 import com.cqie.shortlink_project.entity.CacheEvictMessage;
@@ -34,11 +35,14 @@ import org.springframework.util.StringUtils;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.cqie.shortlink_common.common.constant.GroupConstant.DEFAULT_GROUP_NAME;
@@ -167,6 +171,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         }
 
         IPage<LinkDO> linkPage = baseMapper.selectPage(page, queryWrapper);
+        Map<String, Long> clickStatsMap = queryClickStats(linkPage.getRecords());
         List<ShortLinkPageResponse> records = linkPage.getRecords().stream().map(linkDO -> {
             ShortLinkPageResponse response = new ShortLinkPageResponse();
             response.setId(linkDO.getId());
@@ -174,7 +179,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
             response.setShortUri(linkDO.getShortUri());
             response.setFullShortUrl(linkDO.getFullShortUrl());
             response.setOriginUrl(linkDO.getOriginUrl());
-            response.setClickNum(linkDO.getClickNum());
+            response.setClickNum(resolveClickNum(linkDO, clickStatsMap));
             response.setGid(linkDO.getGid());
             response.setEnableStatus(linkDO.getEnableStatus());
             response.setCreatedType(linkDO.getCreatedType());
@@ -189,6 +194,41 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         Page<ShortLinkPageResponse> resultPage = new Page<>(linkPage.getCurrent(), linkPage.getSize(), linkPage.getTotal());
         resultPage.setRecords(records);
         return resultPage;
+    }
+
+    private Map<String, Long> queryClickStats(List<LinkDO> links) {
+        if (links == null || links.isEmpty()) {
+            return Map.of();
+        }
+
+        Set<String> linkKeys = new LinkedHashSet<>();
+        for (LinkDO link : links) {
+            if (StringUtils.hasText(link.getFullShortUrl())) {
+                linkKeys.add(link.getFullShortUrl());
+            }
+            if (StringUtils.hasText(link.getShortUri())) {
+                linkKeys.add(link.getShortUri());
+            }
+        }
+        if (linkKeys.isEmpty()) {
+            return Map.of();
+        }
+
+        List<LinkClickStatsResponse> statsList = baseMapper.selectHourPvStatsByLinkKeys(new ArrayList<>(linkKeys));
+        return statsList.stream()
+                .collect(Collectors.toMap(
+                        LinkClickStatsResponse::getLinkKey,
+                        item -> item.getClickNum() == null ? 0L : item.getClickNum(),
+                        Long::sum
+                ));
+    }
+
+    private Long resolveClickNum(LinkDO linkDO, Map<String, Long> clickStatsMap) {
+        Long fullShortUrlClickNum = clickStatsMap.get(linkDO.getFullShortUrl());
+        if (fullShortUrlClickNum != null) {
+            return fullShortUrlClickNum;
+        }
+        return clickStatsMap.getOrDefault(linkDO.getShortUri(), 0L);
     }
 
     /**
