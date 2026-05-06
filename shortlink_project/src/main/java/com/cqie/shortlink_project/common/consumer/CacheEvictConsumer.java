@@ -21,7 +21,6 @@ import org.springframework.stereotype.Component;
 public class CacheEvictConsumer implements RocketMQListener<MessageExt> {
 
     private final ObjectMapper objectMapper;
-    private final IdempotentUtil idempotentUtil;
     private final RedisTemplate<String, String> redisTemplate;
 
     @Override
