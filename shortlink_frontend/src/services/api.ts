@@ -97,6 +97,15 @@ export interface DescriptionResult {
   isSafe: boolean;
 }
 
+export interface LinkAccessStatsResult {
+  fullShortUrl?: string;
+  shortUri?: string;
+  date: string;
+  hour: number;
+  dayClickNum: number;
+  hourClickNum: number;
+}
+
 let unauthorizedHandler: (() => void) | undefined;
 
 export function setUnauthorizedHandler(handler: () => void) {
@@ -318,6 +327,18 @@ export async function pageShortLinks(params: { gid?: string; current: number; si
 export function fetchGroupLinkCounts(username: string) {
   return projectRequest<GroupCountItem[]>('/api/shortlink/v1/link/group/list', {
     query: { username },
+    auth: false
+  });
+}
+
+export function fetchLinkAccessStats(params: {
+  fullShortUrl?: string;
+  shortUri?: string;
+  date: string;
+  hour: number;
+}) {
+  return adminRequest<LinkAccessStatsResult>('/api/shortlink/v1/link/access-stats/query', {
+    query: params,
     auth: false
   });
 }

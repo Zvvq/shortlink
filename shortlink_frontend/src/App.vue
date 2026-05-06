@@ -39,6 +39,7 @@ import {
   deleteShortLink,
   fetchGroupLinkCounts,
   fetchGroups,
+  fetchLinkAccessStats,
   fetchUserInfo,
   generateDescription,
   getStoredToken,
@@ -58,6 +59,20 @@ import type { GroupItem, GroupCountItem, ShortLinkItem, UserInfo } from './servi
 
 type AuthMode = 'login' | 'register';
 type NoticeType = 'success' | 'error' | 'info';
+type HourClickPoint = {
+  hour: number;
+  clickNum: number;
+};
+
+const CHART_WIDTH = 720;
+const CHART_HEIGHT = 260;
+const CHART_PADDING = {
+  top: 18,
+  right: 18,
+  bottom: 34,
+  left: 52
+};
+const CHART_X_LABEL_HOURS = [0, 6, 12, 18, 23];
 
 const defaultDomain = import.meta.env.VITE_DEFAULT_DOMAIN || 'http://localhost:8081';
 
@@ -95,6 +110,12 @@ const linksPage = reactive({
   size: 8,
   pages: 1
 });
+const accessStatsLoading = ref(false);
+const accessStatsError = ref('');
+const accessStatsLink = ref<ShortLinkItem | null>(null);
+const accessStatsDate = ref(toDateParam());
+const accessStatsDayTotal = ref(0);
+const hourlyClicks = ref<HourClickPoint[]>(createEmptyHourlyClicks());
 
 const createForm = reactive({
   domain: defaultDomain,
@@ -121,6 +142,7 @@ const notice = reactive({
 });
 
 let noticeTimer: number | undefined;
+let accessStatsRequestId = 0;
 
 const groupCountMap = computed(() => {
   const map = new Map<string, number>();
@@ -142,6 +164,39 @@ const currentClicks = computed(() => linksPage.records.reduce((sum, item) => sum
 const activeLinks = computed(() => linksPage.records.filter((item) => item.enableStatus === 1).length);
 const canPrev = computed(() => linksPage.current > 1);
 const canNext = computed(() => linksPage.current < linksPage.pages);
+const chartPlotWidth = CHART_WIDTH - CHART_PADDING.left - CHART_PADDING.right;
+const chartPlotHeight = CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom;
+const chartBaseY = CHART_HEIGHT - CHART_PADDING.bottom;
+const accessStatsMax = computed(() => Math.max(1, ...hourlyClicks.value.map((item) => item.clickNum)));
+const accessStatsPeak = computed(() =>
+  hourlyClicks.value.reduce(
+    (peak, item) => (item.clickNum > peak.clickNum ? item : peak),
+    { hour: 0, clickNum: 0 }
+  )
+);
+const chartPoints = computed(() =>
+  hourlyClicks.value.map((item) => {
+    const x = chartX(item.hour);
+    const y = CHART_PADDING.top + (1 - item.clickNum / accessStatsMax.value) * chartPlotHeight;
+    return { ...item, x, y };
+  })
+);
+const chartLinePoints = computed(() => chartPoints.value.map((item) => `${item.x},${item.y}`).join(' '));
+const chartAreaPoints = computed(() => {
+  const points = chartPoints.value;
+  if (!points.length) return '';
+  return `${points[0].x},${chartBaseY} ${chartLinePoints.value} ${points[points.length - 1].x},${chartBaseY}`;
+});
+const chartYTicks = computed(() =>
+  [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+    const value = Math.round(accessStatsMax.value * ratio);
+    const y = CHART_PADDING.top + (1 - ratio) * chartPlotHeight;
+    return {
+      y,
+      label: formatCompactNumber(value)
+    };
+  })
+);
 
 const filteredLinks = computed(() => {
   const keyword = searchKeyword.value.trim().toLowerCase();
@@ -153,6 +208,37 @@ const filteredLinks = computed(() => {
       .some((value) => String(value).toLowerCase().includes(keyword))
   );
 });
+
+function createEmptyHourlyClicks() {
+  return Array.from({ length: 24 }, (_, hour) => ({
+    hour,
+    clickNum: 0
+  }));
+}
+
+function toDateParam(date = new Date()) {
+  const pad = (num: number) => String(num).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function formatInteger(value: number) {
+  return new Intl.NumberFormat('zh-CN').format(Math.max(0, Math.round(Number(value || 0))));
+}
+
+function formatCompactNumber(value: number) {
+  return new Intl.NumberFormat('zh-CN', {
+    notation: 'compact',
+    maximumFractionDigits: 1
+  }).format(Math.max(0, Math.round(Number(value || 0))));
+}
+
+function formatHour(hour: number) {
+  return `${String(hour).padStart(2, '0')}:00`;
+}
+
+function chartX(hour: number) {
+  return CHART_PADDING.left + (hour / 23) * chartPlotWidth;
+}
 
 function showNotice(message: string, type: NoticeType = 'info') {
   notice.message = message;
@@ -167,6 +253,16 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
 
+function resetAccessStats() {
+  accessStatsRequestId += 1;
+  accessStatsLoading.value = false;
+  accessStatsError.value = '';
+  accessStatsLink.value = null;
+  accessStatsDate.value = toDateParam();
+  accessStatsDayTotal.value = 0;
+  hourlyClicks.value = createEmptyHourlyClicks();
+}
+
 function resetWorkspace() {
   currentUser.value = null;
   groups.value = [];
@@ -176,6 +272,7 @@ function resetWorkspace() {
   linksPage.total = 0;
   linksPage.current = 1;
   linksPage.pages = 1;
+  resetAccessStats();
 }
 
 async function bootstrap() {
@@ -277,6 +374,69 @@ async function loadGroupCounts() {
   groupCounts.value = await fetchGroupLinkCounts(currentUser.value.username);
 }
 
+async function loadTodayAccessStats(target = accessStatsLink.value) {
+  if (!target) {
+    resetAccessStats();
+    return;
+  }
+
+  const statsDate = toDateParam();
+  accessStatsLoading.value = true;
+  accessStatsError.value = '';
+  accessStatsLink.value = target;
+  accessStatsDate.value = statsDate;
+  const requestId = ++accessStatsRequestId;
+
+  try {
+    const hourlyResults = await Promise.all(
+      createEmptyHourlyClicks().map((item) =>
+        fetchLinkAccessStats({
+          fullShortUrl: target.fullShortUrl,
+          shortUri: target.shortUri,
+          date: statsDate,
+          hour: item.hour
+        })
+      )
+    );
+    if (requestId !== accessStatsRequestId) return;
+
+    hourlyClicks.value = hourlyResults.map((item, hour) => ({
+      hour,
+      clickNum: Number(item?.hourClickNum || 0)
+    }));
+    accessStatsDayTotal.value = Number(hourlyResults[0]?.dayClickNum || hourlyClicks.value.reduce((sum, item) => sum + item.clickNum, 0));
+  } catch (error) {
+    if (requestId !== accessStatsRequestId) return;
+    hourlyClicks.value = createEmptyHourlyClicks();
+    accessStatsDayTotal.value = 0;
+    accessStatsError.value = getErrorMessage(error);
+  } finally {
+    if (requestId === accessStatsRequestId) {
+      accessStatsLoading.value = false;
+    }
+  }
+}
+
+async function syncAccessStatsWithLinks() {
+  if (!linksPage.records.length) {
+    resetAccessStats();
+    return;
+  }
+
+  const current = accessStatsLink.value
+    ? linksPage.records.find((item) => item.fullShortUrl === accessStatsLink.value?.fullShortUrl)
+    : null;
+  await loadTodayAccessStats(current || linksPage.records[0]);
+}
+
+async function selectAccessStatsLink(item: ShortLinkItem) {
+  await loadTodayAccessStats(item);
+}
+
+function isAccessStatsLink(item: ShortLinkItem) {
+  return accessStatsLink.value?.fullShortUrl === item.fullShortUrl;
+}
+
 async function selectGroup(gid: string) {
   selectedGid.value = gid;
   createForm.gid = gid;
@@ -289,6 +449,7 @@ async function loadLinks() {
     linksPage.records = [];
     linksPage.total = 0;
     linksPage.pages = 1;
+    resetAccessStats();
     return;
   }
 
@@ -304,6 +465,7 @@ async function loadLinks() {
     linksPage.current = data.current || 1;
     linksPage.size = data.size || linksPage.size;
     linksPage.pages = Math.max(1, data.pages || 1);
+    await syncAccessStatsWithLinks();
   } catch (error) {
     showNotice(getErrorMessage(error), 'error');
   } finally {
@@ -758,6 +920,93 @@ onMounted(() => {
         </article>
       </section>
 
+      <section class="surface access-chart-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Today</p>
+            <h3>今日点击趋势</h3>
+          </div>
+          <button class="icon-text" type="button" :disabled="accessStatsLoading || !accessStatsLink" @click="loadTodayAccessStats()">
+            <LoaderCircle v-if="accessStatsLoading" class="spin" :size="17" />
+            <RefreshCw v-else :size="17" />
+            刷新趋势
+          </button>
+        </div>
+
+        <div v-if="!accessStatsLink" class="empty-state compact">
+          <Inbox :size="32" />
+          <strong>暂无可统计短链</strong>
+          <span>当前分组有短链后会自动展示今日小时点击量</span>
+        </div>
+
+        <template v-else>
+          <div class="chart-summary">
+            <div>
+              <span>统计短链</span>
+              <strong>{{ accessStatsLink.shortUri }}</strong>
+              <small>{{ accessStatsLink.fullShortUrl }}</small>
+            </div>
+            <div>
+              <span>今日总点击</span>
+              <strong>{{ formatInteger(accessStatsDayTotal) }}</strong>
+              <small>{{ accessStatsDate }}</small>
+            </div>
+            <div>
+              <span>峰值小时</span>
+              <strong>{{ formatHour(accessStatsPeak.hour) }}</strong>
+              <small>{{ formatInteger(accessStatsPeak.clickNum) }} 次</small>
+            </div>
+          </div>
+
+          <div v-if="linksPage.records.length > 1" class="stats-link-switcher">
+            <button
+              v-for="item in linksPage.records"
+              :key="item.fullShortUrl"
+              type="button"
+              :class="{ active: isAccessStatsLink(item) }"
+              @click="selectAccessStatsLink(item)"
+            >
+              <span>{{ item.shortUri }}</span>
+              <small>{{ formatInteger(item.clickNum || 0) }}</small>
+            </button>
+          </div>
+
+          <div class="chart-frame">
+            <svg class="access-chart" :viewBox="`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`" preserveAspectRatio="none" role="img">
+              <g v-for="tick in chartYTicks" :key="`${tick.y}-${tick.label}`" class="chart-grid-line">
+                <line :x1="CHART_PADDING.left" :x2="CHART_WIDTH - CHART_PADDING.right" :y1="tick.y" :y2="tick.y" />
+                <text :x="CHART_PADDING.left - 10" :y="tick.y + 4">{{ tick.label }}</text>
+              </g>
+              <polygon v-if="chartAreaPoints" class="chart-area" :points="chartAreaPoints" />
+              <polyline class="chart-line" :points="chartLinePoints" />
+              <g class="chart-points">
+                <circle
+                  v-for="point in chartPoints"
+                  :key="point.hour"
+                  :cx="point.x"
+                  :cy="point.y"
+                  :r="point.hour === accessStatsPeak.hour && point.clickNum > 0 ? 4.8 : 3.2"
+                >
+                  <title>{{ formatHour(point.hour) }} {{ formatInteger(point.clickNum) }} 次</title>
+                </circle>
+              </g>
+              <g class="chart-x-axis">
+                <text v-for="hour in CHART_X_LABEL_HOURS" :key="hour" :x="chartX(hour)" :y="CHART_HEIGHT - 9">
+                  {{ formatHour(hour) }}
+                </text>
+              </g>
+            </svg>
+
+            <div v-if="accessStatsLoading" class="chart-overlay">
+              <LoaderCircle class="spin" :size="24" />
+              <span>加载今日点击量</span>
+            </div>
+          </div>
+
+          <p v-if="accessStatsError" class="chart-error">{{ accessStatsError }}</p>
+        </template>
+      </section>
+
       <section class="workspace-grid">
         <form class="surface creator-panel" @submit.prevent="submitCreate">
           <div class="section-head">
@@ -875,7 +1124,13 @@ onMounted(() => {
             <span>有效期</span>
             <span>操作</span>
           </div>
-          <article v-for="item in filteredLinks" :key="item.fullShortUrl" class="link-row-card">
+          <article
+            v-for="item in filteredLinks"
+            :key="item.fullShortUrl"
+            class="link-row-card"
+            :class="{ active: isAccessStatsLink(item) }"
+            @click="selectAccessStatsLink(item)"
+          >
             <div class="short-cell">
               <strong>{{ item.shortUri }}</strong>
               <span>{{ item.fullShortUrl }}</span>
@@ -888,10 +1143,10 @@ onMounted(() => {
             <strong class="clicks">{{ item.clickNum || 0 }}</strong>
             <span class="muted">{{ item.validDateType === 0 ? validTypeLabel(item.validDateType) : formatDate(item.validDate) }}</span>
             <div class="row-actions">
-              <button type="button" title="复制" @click="copyText(item.fullShortUrl)"><Copy :size="17" /></button>
-              <button type="button" title="打开" @click="openUrl(item.fullShortUrl)"><ExternalLink :size="17" /></button>
-              <button type="button" title="编辑" @click="openEditor(item)"><Pencil :size="17" /></button>
-              <button type="button" title="删除" @click="removeLink(item)"><Trash2 :size="17" /></button>
+              <button type="button" title="复制" @click.stop="copyText(item.fullShortUrl)"><Copy :size="17" /></button>
+              <button type="button" title="打开" @click.stop="openUrl(item.fullShortUrl)"><ExternalLink :size="17" /></button>
+              <button type="button" title="编辑" @click.stop="openEditor(item)"><Pencil :size="17" /></button>
+              <button type="button" title="删除" @click.stop="removeLink(item)"><Trash2 :size="17" /></button>
             </div>
           </article>
         </div>
