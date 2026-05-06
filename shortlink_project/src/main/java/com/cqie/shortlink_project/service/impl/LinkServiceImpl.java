@@ -32,9 +32,13 @@ import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.cqie.shortlink_common.common.constant.GroupConstant.DEFAULT_GROUP_NAME;
@@ -45,6 +49,9 @@ import static com.cqie.shortlink_common.common.convention.errorcode.BaseErrorCod
 @Slf4j
 public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         implements LinkService {
+
+    private static final int PERMANENT_VALID_DATE_TYPE = 0;
+    private static final LocalDateTime PERMANENT_VALID_DATE = LocalDateTime.of(2099, 1, 1, 0, 0);
 
     private final GroupMapper groupMapper;
     private final RocketMQTemplate rocketMQTemplate;
@@ -65,6 +72,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         LinkDO linkDO = BeanUtil.convert(requestParam, LinkDO.class);
         linkDO.setShortUri(shortLink);
         linkDO.setFullShortUrl(requestParam.getDomain() + "/" + shortLink);
+        linkDO.setValidDate(resolveValidDate(requestParam.getValidDateType(), requestParam.getValidDate()));
         linkDO.setClickNum(0L);
         linkDO.setEnableStatus(1);
         baseMapper.insert(linkDO);
@@ -93,7 +101,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
 
         linkDO.setOriginUrl(requestParam.getOriginUrl());
         linkDO.setValidDateType(requestParam.getValidDateType());
-        linkDO.setValidDate(requestParam.getValidDate());
+        linkDO.setValidDate(resolveValidDate(requestParam.getValidDateType(), requestParam.getValidDate()));
         linkDO.setDescribe(requestParam.getDescribe());
 
         int update = baseMapper.updateById(linkDO);
@@ -279,5 +287,12 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
             throw new ClientException(GROUP_NOT_EXIST_ERROR);
         }
         return defaultGroup.getGid();
+    }
+
+    private Date resolveValidDate(Integer validDateType, Date validDate) {
+        if (Objects.equals(validDateType, PERMANENT_VALID_DATE_TYPE)) {
+            return Timestamp.valueOf(PERMANENT_VALID_DATE);
+        }
+        return validDate;
     }
 }
