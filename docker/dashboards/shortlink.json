@@ -1,0 +1,82 @@
+{
+  "title": "ShortLink 监控面板",
+  "tags": ["spring-boot", "shortlink"],
+  "panels": [
+    {
+      "title": "HTTP 请求速率 /s",
+      "type": "stat",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 3},
+      "targets": [{"expr": "sum(rate(http_server_requests_seconds_count[1m]))", "legendFormat": "QPS"}],
+      "fieldConfig": {"defaults": {"unit": "reqps"}}
+    },
+    {
+      "title": "应用启动时间",
+      "type": "stat",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 3},
+      "targets": [{"expr": "application_started_time_seconds", "legendFormat": "{{instance}}"}],
+      "fieldConfig": {"defaults": {"unit": "s"}}
+    },
+    {
+      "title": "GC 速率 /s",
+      "type": "stat",
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 3},
+      "targets": [{"expr": "sum(rate(jvm_gc_pause_seconds_count[1m]))", "legendFormat": "GC count/s"}],
+      "fieldConfig": {"defaults": {"unit": "ops"}}
+    },
+    {
+      "title": "CPU 使用率",
+      "type": "stat",
+      "gridPos": {"x": 18, "y": 0, "w": 6, "h": 3},
+      "targets": [{"expr": "avg(process_cpu_usage) * 100", "legendFormat": "CPU %"}],
+      "fieldConfig": {"defaults": {"unit": "percent", "max": 100}}
+    },
+    {
+      "title": "JVM 堆内存",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 3, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "jvm_memory_used_bytes{area=\"heap\"}", "legendFormat": "{{instance}} 已用"},
+        {"expr": "jvm_memory_max_bytes{area=\"heap\"}", "legendFormat": "{{instance}} 最大"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "bytes"}}
+    },
+    {
+      "title": "HTTP 请求延迟 (P99)",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 3, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{uri!~\"/actuator/.*\"}[1m])) by (le, instance))", "legendFormat": "{{instance}} 业务 P99"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "s"}}
+    },
+    {
+      "title": "HTTP 错误统计",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 11, "w": 8, "h": 7},
+      "targets": [
+        {"expr": "sum(rate(http_server_requests_seconds_count{status=~\"4..|5..\"}[1m])) by (instance, status)", "legendFormat": "{{instance}} HTTP {{status}}"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "reqps"}}
+    },
+    {
+      "title": "HikariCP 连接池",
+      "type": "timeseries",
+      "gridPos": {"x": 8, "y": 11, "w": 8, "h": 7},
+      "targets": [
+        {"expr": "hikaricp_connections_active", "legendFormat": "{{instance}} 活跃"},
+        {"expr": "hikaricp_connections_idle", "legendFormat": "{{instance}} 空闲"},
+        {"expr": "hikaricp_connections_pending", "legendFormat": "{{instance}} 等待"}
+      ]
+    },
+    {
+      "title": "JVM 线程数",
+      "type": "timeseries",
+      "gridPos": {"x": 16, "y": 11, "w": 8, "h": 7},
+      "targets": [
+        {"expr": "jvm_threads_live_threads", "legendFormat": "{{instance}} 活跃"}
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "refresh": "10s"
+}

@@ -36,6 +36,22 @@ logging:
     com.shortlink: debug
 
 
+# Actuator + Prometheus 监控端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+
 rocketmq:
   name-server: 127.0.0.1:9876 # RocketMQ NameServer 地址
   producer:

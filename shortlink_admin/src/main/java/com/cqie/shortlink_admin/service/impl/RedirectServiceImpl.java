@@ -63,8 +63,11 @@ public class RedirectServiceImpl implements RedirectService {
 
         // 获取分布式锁
         RLock lock = redissonClient.getLock(LOCK_SHORT_LINK_REBUILD + shortUrl);
-        lock.lock();
         try {
+            if (!lock.tryLock(10, TimeUnit.SECONDS)) {
+                return;
+            }
+
             // double-check
             if (checkShortLinkCache(shortUrl, request, response)) {
                 return;
@@ -96,7 +99,10 @@ public class RedirectServiceImpl implements RedirectService {
 
 
             log.info("重定向成功: {} -> {}", shortUrl, shortLink.getOriginUrl());
-        } finally {
+        }catch (InterruptedException e) {
+            log.error("获取锁失败: {}", e.getMessage(), e);
+        }
+        finally {
             lock.unlock();
         }
     }
